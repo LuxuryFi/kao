@@ -1,0 +1,24 @@
+service:
+  name: api-tracking
+  baseUrl: /
+
+server:
+  host: 127.0.0.1
+  port: 4000
+  swaggerSchema: http
+
+logger:
+  level: debug
+  autoLogging: false
+
+db:
+  host:
+  port:
+  username:
+  password:
+  database:
+
+jwt:
+  secret: secret
+  expiresIn: 3h
+  refreshExpiresIn: 30d

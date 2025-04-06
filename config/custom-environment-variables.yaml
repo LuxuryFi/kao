@@ -1,0 +1,20 @@
+service:
+  name: SERVICE_NAME
+
+server:
+  host: SERVER_HOST
+  port: SERVER_PORT
+  swaggerScheme: SERVER_SWAGGER_SCHEME
+
+logger:
+  level: LOGGER_LEVEL
+
+db:
+  host: DB_HOST
+  port: DB_PORT
+  username: DB_USERNAME
+  password: DB_PASSWORD
+  database: DB_DATABASE
+
+jwt:
+  secret: JWT_SECRET

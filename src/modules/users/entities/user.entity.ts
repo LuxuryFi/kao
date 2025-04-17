@@ -25,15 +25,6 @@ export class UserEntity extends BaseEntity {
   @IsString()
   @Column({
     type: 'char',
-    length: 7,
-    default: 'public',
-  })
-  type: string;
-
-  @ApiProperty()
-  @IsString()
-  @Column({
-    type: 'char',
     length: 256,
     default: 'public',
   })
@@ -64,6 +55,15 @@ export class UserEntity extends BaseEntity {
     default: '',
   })
   url: string;
+
+  @ApiProperty()
+  @IsString()
+  @Column({
+    type: 'char',
+    length: 256,
+    default: '',
+  })
+  role: string;
 
   @ApiProperty()
   @IsString()
@@ -117,4 +117,20 @@ export class UserEntity extends BaseEntity {
     default: () => 'CURRENT_TIMESTAMP',
   })
   created_at: Date;
+
+  @ApiProperty()
+  @Column({
+    type: Date,
+    nullable: true,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  start_date: Date;
+
+  @ApiProperty()
+  @Column({
+    type: Date,
+    nullable: true,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  end_date: Date;
 }

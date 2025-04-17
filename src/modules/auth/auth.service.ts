@@ -12,7 +12,6 @@ import { IConfig } from 'config';
 import { Errors } from 'src/constants/errors';
 import { CONFIG } from 'src/modules/config/config.provider';
 import { UsersService } from 'src/modules/users/users.service';
-import { InternalService } from '../internals/internal.service';
 import { JWTDecodeValue, Payload } from './interface/auth.interface';
 import { LoginResponse } from './response/login.response';
 
@@ -21,7 +20,6 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
-    private readonly internalsService: InternalService,
     @Inject(CONFIG) private readonly configService: IConfig,
   ) {}
 
@@ -48,32 +46,8 @@ export class AuthService {
     };
   }
 
-  async validateInternalUser(email: string, password: string) {
-    const user = await this.internalsService.findOne({
-      where: {
-        email,
-      },
-    });
-    console.log('user', user);
-    if (!user) throw new NotFoundException(Errors.USER_NOT_FOUND);
-
-    const samePassword = await compare(password, user.password);
-    if (!samePassword)
-      throw new BadRequestException(Errors.USER_PASSWORD_IS_INCORRECT);
-
-    return {
-      sub: user.id,
-      email: user.email,
-    };
-  }
-
   async login(email: string, password: string): Promise<LoginResponse> {
     const payload = await this.validateUser(email, password);
-    return this.generateTokens(payload);
-  }
-
-  async internalLogin(email: string, password: string): Promise<LoginResponse> {
-    const payload = await this.validateInternalUser(email, password);
     return this.generateTokens(payload);
   }
 

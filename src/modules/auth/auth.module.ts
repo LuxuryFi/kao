@@ -4,7 +4,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { IConfig } from 'config';
 import { ConfigModule } from '../config/config.module';
 import { CONFIG, getHost } from '../config/config.provider';
-import { InternalModule } from '../internals/internal.module';
 import { UserModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -28,7 +27,6 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
     }),
     HttpModule,
     UserModule,
-    InternalModule,
   ],
   controllers: [AuthController],
   providers: [

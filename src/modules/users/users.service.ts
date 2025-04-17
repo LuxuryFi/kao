@@ -33,4 +33,33 @@ export class UsersService extends BaseService<UserEntity> {
 
     return true;
   }
+
+  async getUserByRole(payload) {
+    // Query the users with pagination and filtering by role
+    const { skip = 0, select = 20, email, phone, name, status, role } = payload;
+
+    const query = this.usersRepository.createQueryBuilder('user');
+
+    if (email) {
+      query.andWhere('user.email LIKE :email', { email: `%${email}%` });
+    }
+    if (phone) {
+      query.andWhere('user.phone LIKE :phone', { phone: `%${phone}%` });
+    }
+    if (name) {
+      query.andWhere('user.name LIKE :name', { name: `%${name}%` });
+    }
+    if (status !== undefined) {
+      query.andWhere('user.status = :status', { status });
+    }
+    if (role) {
+      query.andWhere('user.role LIKE :role', { role: `%${role}%` });
+    }
+
+    query.skip(skip).take(select);
+
+    const [result, totalCount] = await query.getManyAndCount();
+
+    return [result, totalCount];
+  }
 }

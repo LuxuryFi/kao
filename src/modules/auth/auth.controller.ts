@@ -29,19 +29,6 @@ export class AuthController {
     return this.authService.login(data.email, data.password);
   }
 
-  @Post('internal_login')
-  @ApiOperation({
-    summary: 'Internal Login',
-  })
-  @ApiBody({ type: LoginDto })
-  @ApiOkResponse({
-    type: LoginResponse,
-  })
-  internalLogin(@Body() data: LoginDto): Promise<LoginResponse> {
-    console.log('data', data);
-    return this.authService.internalLogin(data.email, data.password);
-  }
-
   @Get('refresh')
   @ApiOperation({
     summary: 'Get new accessToken & refreshToken',

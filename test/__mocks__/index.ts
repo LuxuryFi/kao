@@ -17,7 +17,7 @@ export const fakeUserModel = {
 export const mockRequestUser = {
   loginId: 3,
   _id: new mongoose.Types.ObjectId('5e997f95d6a35f3a0def3339'),
-  email: 'newemail@email.com',
+  username: 'newemail@username.com',
   company: 'string',
   branch: 'string',
   companyAddress: 'string',

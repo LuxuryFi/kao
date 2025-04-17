@@ -11,7 +11,6 @@ export class UserEntity extends BaseEntity {
   })
   id: number;
 
-  @IsEmail()
   @ApiProperty({
     type: String,
   })
@@ -19,7 +18,7 @@ export class UserEntity extends BaseEntity {
     type: 'char',
     length: 256,
   })
-  email: string;
+  username: string;
 
   @ApiProperty()
   @IsString()
@@ -30,13 +29,14 @@ export class UserEntity extends BaseEntity {
   })
   address: string;
 
+  @IsEmail()
   @ApiProperty()
   @Column({
     type: 'char',
     length: 256,
     default: '',
   })
-  phone: string;
+  email: string;
 
   @ApiProperty()
   @IsString()

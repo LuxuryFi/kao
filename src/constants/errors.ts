@@ -35,8 +35,8 @@ export const Errors = {
     message: 'Username or password is incorrect',
     code: getUserErrorCode('002'),
   },
-  USER_EMAIL_EXISTED: {
-    message: 'Email existed',
+  USER_NAME_EXISTED: {
+    message: 'Username existed',
     code: getUserErrorCode('003'),
   },
   USER_EMAIL_NOT_FOUND: {

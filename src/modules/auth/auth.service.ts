@@ -27,10 +27,10 @@ export class AuthService {
     return payload;
   }
 
-  async validateUser(email: string, password: string) {
+  async validateUser(username: string, password: string) {
     const user = await this.usersService.findOne({
       where: {
-        email,
+        username,
       },
     });
     console.log('user', user);
@@ -42,12 +42,12 @@ export class AuthService {
 
     return {
       sub: user.id,
-      email: user.email,
+      username: user.username,
     };
   }
 
-  async login(email: string, password: string): Promise<LoginResponse> {
-    const payload = await this.validateUser(email, password);
+  async login(username: string, password: string): Promise<LoginResponse> {
+    const payload = await this.validateUser(username, password);
     return this.generateTokens(payload);
   }
 
@@ -85,7 +85,7 @@ export class AuthService {
 
     const tokens = await this.generateTokens({
       sub: user.id,
-      email: user.email,
+      username: user.username,
     });
 
     return tokens;

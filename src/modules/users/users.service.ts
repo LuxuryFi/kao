@@ -20,10 +20,10 @@ export class UsersService extends BaseService<UserEntity> {
   }
 
   async validateUser(payload) {
-    const { email } = payload;
+    const { username } = payload;
     const user = await this.usersRepository.find({
       where: {
-        email,
+        username,
       },
     });
 
@@ -36,15 +36,15 @@ export class UsersService extends BaseService<UserEntity> {
 
   async getUserByRole(payload) {
     // Query the users with pagination and filtering by role
-    const { skip = 0, select = 20, email, phone, name, status, role } = payload;
+    const { skip = 0, select = 20, username, email, name, status, role } = payload;
 
     const query = this.usersRepository.createQueryBuilder('user');
 
+    if (username) {
+      query.andWhere('user.username LIKE :username', { username: `%${username}%` });
+    }
     if (email) {
       query.andWhere('user.email LIKE :email', { email: `%${email}%` });
-    }
-    if (phone) {
-      query.andWhere('user.phone LIKE :phone', { phone: `%${phone}%` });
     }
     if (name) {
       query.andWhere('user.name LIKE :name', { name: `%${name}%` });

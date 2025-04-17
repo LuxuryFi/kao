@@ -37,8 +37,8 @@ export class UserController {
 })
 @ApiQuery({ name: 'skip', required: false, description: 'Page number' })
 @ApiQuery({ name: 'select', required: false, description: 'Items per page' })
+@ApiQuery({ name: 'username', required: false, description: 'Filter by username' })
 @ApiQuery({ name: 'email', required: false, description: 'Filter by email' })
-@ApiQuery({ name: 'phone', required: false, description: 'Filter by phone' })
 @ApiQuery({ name: 'name', required: false, description: 'Filter by name' })
 @ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
 @ApiQuery({ name: 'role', required: false, description: 'Filter by role' })
@@ -48,9 +48,9 @@ export class UserController {
 })
 async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
   console.log('PaginationDto', PaginationDto);
-  const { skip = 0, select=20, role='admin', email, phone, name, status } = PaginationDto;
+  const { skip = 0, select=20, role='', username, email, name, status } = PaginationDto;
 
-  const [result, totalCount] = await this.usersService.getUserByRole({ select, skip, role, email, phone, name, status });
+  const [result, totalCount] = await this.usersService.getUserByRole({ select, skip, role, username, email, name, status });
   // Return the response with data and total count for pagination
   return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
 }
@@ -85,9 +85,11 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
   })
   async create(@Body() data: CreateUserDto, @Res() res: Response) {
     try {
-      const { password, email, address, phone, name, url
+      const { password, username, address, email, name, url
         , start_date, end_date, role
        } = data;
+       console.log('data', data)
+       console.log('data')
 
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
@@ -98,19 +100,22 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
         );
       }
 
+      console.log('dât',data)
       const hashedPassword = bcrypt.hashSync(password, 10);
       const payload = {
         password: hashedPassword,
-        email,
+        username,
         start_date,
         end_date,
         role,
         address,
-        phone,
+        email,
         name,
         url,
         status: 1,
       };
+
+      console.log('sdad', payload)
 
       const validate = await this.usersService.validateUser(payload);
 
@@ -120,7 +125,7 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
           res,
           HttpStatusCodes.CONFLICT,
           null,
-          Errors.USER_EMAIL_EXISTED.message,
+          Errors.USER_NAME_EXISTED.message,
         );
       }
 
@@ -150,7 +155,7 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
     @Res() res: Response,
   ) {
     try {
-      const { email, address, phone, name, url, status, role, start_date, end_date } = data;
+      const { address, email, name, url, status, role, start_date, end_date } = data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
           res,
@@ -161,9 +166,8 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
       }
 
       const payload = {
-        email,
         address,
-        phone,
+        email,
         name,
         url,
         status,
@@ -180,7 +184,7 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
           res,
           HttpStatusCodes.CONFLICT,
           null,
-          Errors.USER_EMAIL_EXISTED.message,
+          Errors.USER_NAME_EXISTED.message,
         );
       }
 

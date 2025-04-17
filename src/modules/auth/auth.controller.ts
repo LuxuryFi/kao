@@ -26,7 +26,7 @@ export class AuthController {
   })
   login(@Body() data: LoginDto): Promise<LoginResponse> {
     console.log('data', data);
-    return this.authService.login(data.email, data.password);
+    return this.authService.login(data.username, data.password);
   }
 
   @Get('refresh')

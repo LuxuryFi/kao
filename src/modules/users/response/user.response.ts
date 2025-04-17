@@ -12,7 +12,7 @@ export class CreateUserResponse {
   @ApiProperty({
     description: 'Email',
   })
-  email: string;
+  username: string;
 
   @IsString()
   @ApiProperty({
@@ -28,9 +28,9 @@ export class CreateUserResponse {
 
   @IsString()
   @ApiProperty({
-    description: 'phone',
+    description: 'email',
   })
-  phone: string;
+  email: string;
 
   @IsString()
   @ApiProperty({
@@ -68,7 +68,7 @@ export class GetUserResponse {
   @ApiProperty({
     description: 'Email',
   })
-  email: string;
+  username: string;
 
   @IsString()
   @ApiProperty({
@@ -84,9 +84,9 @@ export class GetUserResponse {
 
   @IsString()
   @ApiProperty({
-    description: 'phone',
+    description: 'email',
   })
-  phone: string;
+  email: string;
 
   @IsString()
   @ApiProperty({
@@ -124,7 +124,7 @@ export class UpdateUserResponse {
   @ApiProperty({
     description: 'Email',
   })
-  email: string;
+  username: string;
 
   @IsString()
   @ApiProperty({
@@ -140,9 +140,9 @@ export class UpdateUserResponse {
 
   @IsString()
   @ApiProperty({
-    description: 'phone',
+    description: 'email',
   })
-  phone: string;
+  email: string;
 
   @IsString()
   @ApiProperty({

@@ -176,18 +176,6 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
         role,
       };
 
-      const validate = await this.usersService.validateUser(payload);
-
-      // Check if user already exists
-      if (!validate) {
-        return sendResponse(
-          res,
-          HttpStatusCodes.CONFLICT,
-          null,
-          Errors.USER_NAME_EXISTED.message,
-        );
-      }
-
       const result = await this.usersService.update(id, payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null); // Use 201 Created for successful user creation
     } catch (err) {

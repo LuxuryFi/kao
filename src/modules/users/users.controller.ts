@@ -47,7 +47,6 @@ export class UserController {
   summary: 'Get Public Users',
 })
 async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
-  console.log('PaginationDto', PaginationDto);
   const { skip = 0, select=20, role='', username, email, name, status } = PaginationDto;
 
   const [result, totalCount] = await this.usersService.getUserByRole({ select, skip, role, username, email, name, status });
@@ -88,8 +87,6 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
       const { password, username, address, email, name, url
         , start_date, end_date, role
        } = data;
-       console.log('data', data)
-       console.log('data')
 
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
@@ -100,7 +97,6 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
         );
       }
 
-      console.log('dât',data)
       const hashedPassword = bcrypt.hashSync(password, 10);
       const payload = {
         password: hashedPassword,
@@ -114,8 +110,6 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
         url,
         status: 1,
       };
-
-      console.log('sdad', payload)
 
       const validate = await this.usersService.validateUser(payload);
 

@@ -11,6 +11,7 @@ export class UserEntity extends BaseEntity {
   })
   id: number;
 
+  @IsString()
   @ApiProperty({
     type: String,
   })

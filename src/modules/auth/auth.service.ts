@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcrypt';
+import { compareSync } from 'bcrypt';
 import { IConfig } from 'config';
 import { Errors } from 'src/constants/errors';
 import { CONFIG } from 'src/modules/config/config.provider';
@@ -33,10 +33,9 @@ export class AuthService {
         username,
       },
     });
-    console.log('user', user);
     if (!user) throw new NotFoundException(Errors.USER_NOT_FOUND);
 
-    const samePassword = await compare(password, user.password);
+    const samePassword = await compareSync(password, user.password);
     if (!samePassword)
       throw new BadRequestException(Errors.USER_PASSWORD_IS_INCORRECT);
 

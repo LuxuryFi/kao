@@ -3,13 +3,23 @@ import {
   Controller,
   Delete,
   Get,
+  Options,
   Param,
   Post,
   Put,
   Query,
+  Req,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
@@ -22,38 +32,103 @@ import {
   GetUserResponse,
   UpdateUserResponse,
 } from './response/user.response';
+
+import { diskStorage } from 'multer';
 import { UsersService } from './users.service';
 @Controller('users')
 @ApiTags('Public User')
 export class UserController {
   constructor(private readonly usersService: UsersService) {}
+  @Options('/upload')
+  handleOptions(@Req() req: Request, @Res() res: Response) {
+    // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization',
+    );
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200); // Respond with 200 OK
+  }
 
-@Get('')
-@ApiQuery({
-  name: 'skip',
-  required: false,
-  description: 'The number of items to skip (for pagination)',
-  type: Number,
-})
-@ApiQuery({ name: 'skip', required: false, description: 'Page number' })
-@ApiQuery({ name: 'select', required: false, description: 'Items per page' })
-@ApiQuery({ name: 'username', required: false, description: 'Filter by username' })
-@ApiQuery({ name: 'email', required: false, description: 'Filter by email' })
-@ApiQuery({ name: 'name', required: false, description: 'Filter by name' })
-@ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
-@ApiQuery({ name: 'role', required: false, description: 'Filter by role' })
+  @Post('user/upload')
+  @UseInterceptors(
+    FileInterceptor('url', {
+      // Configure Multer storage options
+      storage: diskStorage({
+        destination: './public/uploads/users', // Define the directory to store uploaded files
+        filename: (req, file, cb) => {
+          console.log('file', file);
+          console.log('req', req);
+          const filename = `${new Date().getTime()}-${file.originalname}`;
+          cb(null, filename); // Set the file name
+        },
+      }),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
+    }),
+  )
+  uploadFile(@UploadedFile() file) {
+    console.log(file); // File metadata, including path, name, etc.
+    return {
+      message: 'File uploaded successfully!',
+      file: {
+        originalname: file.originalname,
+        filename: file.filename, // This will include the timestamped filename
+        path: file.path, // Path to the uploaded file on the server
+      },
+    };
+  }
 
-@ApiOperation({
-  summary: 'Get Public Users',
-})
-async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
-  const { skip = 0, select=20, role='', username, email, name, status } = PaginationDto;
+  @Get('')
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    description: 'The number of items to skip (for pagination)',
+    type: Number,
+  })
+  @ApiQuery({ name: 'skip', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'select', required: false, description: 'Items per page' })
+  @ApiQuery({
+    name: 'username',
+    required: false,
+    description: 'Filter by username',
+  })
+  @ApiQuery({ name: 'email', required: false, description: 'Filter by email' })
+  @ApiQuery({ name: 'name', required: false, description: 'Filter by name' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by status',
+  })
+  @ApiQuery({ name: 'role', required: false, description: 'Filter by role' })
+  @ApiOperation({
+    summary: 'Get Public Users',
+  })
+  async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
+    const {
+      skip = 0,
+      select = 20,
+      role = '',
+      username,
+      email,
+      name,
+      status,
+    } = PaginationDto;
 
-  const [result, totalCount] = await this.usersService.getUserByRole({ select, skip, role, username, email, name, status });
-  // Return the response with data and total count for pagination
-  return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
-}
-
+    const [result, totalCount] = await this.usersService.getUserByRole({
+      select,
+      skip,
+      role,
+      username,
+      email,
+      name,
+      status,
+    });
+    // Return the response with data and total count for pagination
+    return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
+  }
 
   @Get(':id')
   @ApiOperation({
@@ -84,9 +159,17 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
   })
   async create(@Body() data: CreateUserDto, @Res() res: Response) {
     try {
-      const { password, username, address, email, name, url
-        , start_date, end_date, role
-       } = data;
+      const {
+        password,
+        username,
+        address,
+        email,
+        name,
+        url,
+        start_date,
+        end_date,
+        role,
+      } = data;
 
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
@@ -149,7 +232,8 @@ async find(@Res() res: Response, @Query() PaginationDto): Promise<object> {
     @Res() res: Response,
   ) {
     try {
-      const { address, email, name, url, status, role, start_date, end_date } = data;
+      const { address, email, name, url, status, role, start_date, end_date } =
+        data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
           res,

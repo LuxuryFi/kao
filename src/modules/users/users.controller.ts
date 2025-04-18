@@ -15,6 +15,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBody,
+  ApiConsumes,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -69,6 +71,18 @@ export class UserController {
       },
     }),
   )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   uploadFile(@UploadedFile() file) {
     console.log(file); // File metadata, including path, name, etc.
     return {

@@ -179,6 +179,7 @@ export class UserController {
         address,
         email,
         name,
+        gender,
         url,
         start_date,
         end_date,
@@ -193,6 +194,7 @@ export class UserController {
           `Invalid role. Allowed roles: ${ALLOWED_ROLES.join(', ')}`,
         );
       }
+      const currentTimestamp = Math.floor(Date.now() / 1000); // Or use ms if you're storing milliseconds
 
       const hashedPassword = bcrypt.hashSync(password, 10);
       const payload = {
@@ -200,10 +202,12 @@ export class UserController {
         username,
         start_date,
         end_date,
+        gender,
         role,
         address,
         email,
         name,
+        created_at: currentTimestamp,
         url,
         status: 1,
       };
@@ -246,8 +250,17 @@ export class UserController {
     @Res() res: Response,
   ) {
     try {
-      const { address, email, name, url, status, role, start_date, end_date } =
-        data;
+      const {
+        address,
+        gender,
+        email,
+        name,
+        url,
+        status,
+        role,
+        start_date,
+        end_date,
+      } = data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
           res,
@@ -260,6 +273,7 @@ export class UserController {
       const payload = {
         address,
         email,
+        gender,
         name,
         url,
         status,

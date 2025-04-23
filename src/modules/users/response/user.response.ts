@@ -1,170 +1,44 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsNumber, IsString } from 'class-validator';
 
-export class CreateUserResponse {
+class BaseUserResponse {
   @IsNumber()
-  @ApiProperty({
-    description: 'Id',
-  })
-  id: string;
+  @ApiProperty({ description: 'User ID' })
+  id: number;
 
   @IsString()
-  @ApiProperty({
-    description: 'Email',
-  })
+  @ApiProperty({ description: 'Username' })
   username: string;
 
   @IsString()
-  @ApiProperty({
-    description: 'Name',
-  })
+  @ApiProperty({ description: 'Full name' })
   name: string;
 
   @IsString()
-  @ApiProperty({
-    description: 'address',
-  })
+  @ApiProperty({ description: 'Address' })
   address: string;
 
-  @IsString()
-  @ApiProperty({
-    description: 'email',
-  })
+  @IsEmail()
+  @ApiProperty({ description: 'Email' })
   email: string;
 
-  @IsString()
-  @ApiProperty({
-    description: 'status',
-  })
+  @IsBoolean()
+  @ApiProperty({ description: 'Status (active/inactive)' })
   status: boolean;
 
-  @IsString()
-  @ApiProperty({
-    description: 'gender',
-  })
+  @IsBoolean()
+  @ApiProperty({ description: 'Gender (true=male, false=female)' })
   gender: boolean;
 
   @IsString()
-  @ApiProperty({
-    description: 'type',
-  })
+  @ApiProperty({ description: 'User type or role' })
   type: string;
 
   @IsString()
-  @ApiProperty({
-    description: 'url',
-  })
+  @ApiProperty({ description: 'Profile picture or public URL' })
   url: string;
 }
 
-export class GetUserResponse {
-  @IsNumber()
-  @ApiProperty({
-    description: 'Id',
-  })
-  id: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'Email',
-  })
-  username: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'Name',
-  })
-  name: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'address',
-  })
-  address: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'email',
-  })
-  email: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'status',
-  })
-  status: boolean;
-
-  @IsString()
-  @ApiProperty({
-    description: 'gender',
-  })
-  gender: boolean;
-
-  @IsString()
-  @ApiProperty({
-    description: 'type',
-  })
-  type: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'url',
-  })
-  url: string;
-}
-
-export class UpdateUserResponse {
-  @IsNumber()
-  @ApiProperty({
-    description: 'Id',
-  })
-  id: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'Email',
-  })
-  username: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'Name',
-  })
-  name: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'address',
-  })
-  address: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'email',
-  })
-  email: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'status',
-  })
-  status: boolean;
-
-  @IsString()
-  @ApiProperty({
-    description: 'type',
-  })
-  type: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'url',
-  })
-  url: string;
-
-  @IsString()
-  @ApiProperty({
-    description: 'gender',
-  })
-  gender: boolean;
-}
+export class CreateUserResponse extends BaseUserResponse {}
+export class GetUserResponse extends BaseUserResponse {}
+export class UpdateUserResponse extends BaseUserResponse {}

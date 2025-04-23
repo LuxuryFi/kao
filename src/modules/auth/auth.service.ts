@@ -42,6 +42,9 @@ export class AuthService {
     return {
       sub: user.id,
       username: user.username,
+      url: user.url,
+      name: user.name,
+      gender: user.gender,
     };
   }
 

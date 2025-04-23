@@ -37,6 +37,9 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/public',
+    setHeaders: (res, path) => {
+      res.set('Access-Control-Allow-Origin', '*'); // or restrict to your frontend origin
+    },                               
   });
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Food Store')

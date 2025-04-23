@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsBoolean, IsDate, IsEmail, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -37,17 +42,21 @@ export class CreateUserDto {
   @IsBoolean()
   gender: boolean;
 
-  @ApiProperty()
-  @IsDate()
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+  })
+  @IsNumber()
   @IsOptional()
-  @Type(() => Date)
-  start_date: Date;
+  start_date: number;
 
-  @ApiProperty()
-  @IsDate()
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+  })
+  @IsNumber()
   @IsOptional()
-  @Type(() => Date)
-  end_date: Date;
+  end_date: number;
 
   @ApiProperty()
   @IsString()
@@ -79,15 +88,19 @@ export class UpdateUserDto {
   @IsBoolean()
   gender: boolean;
 
-  @ApiProperty()
-  @IsDate()
-  @Type(() => Date)
-  start_date: Date;
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+  })
+  @IsNumber()
+  start_date: number;
 
-  @ApiProperty()
-  @IsDate()
-  @Type(() => Date)
-  end_date: Date;
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+  })
+  @IsNumber()
+  end_date: number;
 
   @ApiProperty()
   @IsString()

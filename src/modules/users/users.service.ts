@@ -36,12 +36,22 @@ export class UsersService extends BaseService<UserEntity> {
 
   async getUserByRole(payload) {
     // Query the users with pagination and filtering by role
-    const { skip = 0, select = 20, username, email, name, status, role } = payload;
+    const {
+      skip = 0,
+      select = 20,
+      username,
+      email,
+      name,
+      status,
+      role,
+    } = payload;
 
     const query = this.usersRepository.createQueryBuilder('user');
 
     if (username) {
-      query.andWhere('user.username LIKE :username', { username: `%${username}%` });
+      query.andWhere('user.username LIKE :username', {
+        username: `%${username}%`,
+      });
     }
     if (email) {
       query.andWhere('user.email LIKE :email', { email: `%${email}%` });

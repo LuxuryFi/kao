@@ -92,6 +92,7 @@ export class UpdateUserDto {
     type: Number,
     description: 'UNIX timestamp (in seconds or ms)',
   })
+  @IsOptional()
   @IsNumber()
   start_date: number;
 
@@ -99,6 +100,7 @@ export class UpdateUserDto {
     type: Number,
     description: 'UNIX timestamp (in seconds or ms)',
   })
+  @IsOptional()
   @IsNumber()
   end_date: number;
 

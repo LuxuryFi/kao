@@ -10,6 +10,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '../config/config.module';
 import { CONFIG } from '../config/config.provider';
 import { CoursesModule } from '../courses/courses.module';
+import { CourtsModule } from '../courts/courts.module';
 import { UserModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -38,6 +39,7 @@ import { AppService } from './app.service';
     }),
     AuthModule,
     UserModule,
+    CourtsModule,
     CoursesModule,
   ],
   controllers: [AppController],

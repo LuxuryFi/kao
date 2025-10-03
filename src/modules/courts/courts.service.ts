@@ -19,13 +19,15 @@ export class CourtsService extends BaseService<CourtEntity> {
   async findFilteredPaginated(params: {
     city?: string;
     district?: string;
+    keyword?: string;
     skip?: number;
     select?: number;
   }): Promise<[CourtEntity[], number]> {
-    const { city, district, skip = 0, select = 20 } = params || ({} as any);
+    const { city, district, keyword, skip = 0, select = 20 } = params || ({} as any);
     const qb = this.courtsRepository.createQueryBuilder('court');
     if (city) qb.andWhere('court.city = :city', { city });
     if (district) qb.andWhere('court.district = :district', { district });
+    if (keyword) qb.andWhere('(court.name LIKE :kw OR court.description LIKE :kw)', { kw: `%${keyword}%` });
     qb.skip(skip).take(select);
     return qb.getManyAndCount();
   }

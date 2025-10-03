@@ -31,12 +31,14 @@ export class CourtsController {
   @ApiOperation({ summary: 'List Courts' })
   @ApiQuery({ name: 'city', required: false })
   @ApiQuery({ name: 'district', required: false })
+  @ApiQuery({ name: 'keyword', required: false, description: 'Search by name (LIKE)' })
   @ApiQuery({ name: 'skip', required: false, description: 'Items to skip (offset)' })
   @ApiQuery({ name: 'select', required: false, description: 'Items per page (limit)' })
   async findAll(
     @Res() res: Response,
     @Query('city') city?: string,
     @Query('district') district?: string,
+    @Query('keyword') keyword?: string,
     @Query('skip') skip?: string,
     @Query('select') select?: string,
   ) {
@@ -44,6 +46,7 @@ export class CourtsController {
       const [result, totalCount] = await this.courtsService.findFilteredPaginated({
         city,
         district,
+        keyword,
         skip: skip ? Number(skip) : 0,
         select: select ? Number(select) : 20,
       });

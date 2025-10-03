@@ -15,6 +15,20 @@ export class CourtsService extends BaseService<CourtEntity> {
   ) {
     super(courtsRepository);
   }
+
+  async findFilteredPaginated(params: {
+    city?: string;
+    district?: string;
+    skip?: number;
+    select?: number;
+  }): Promise<[CourtEntity[], number]> {
+    const { city, district, skip = 0, select = 20 } = params || ({} as any);
+    const qb = this.courtsRepository.createQueryBuilder('court');
+    if (city) qb.andWhere('court.city = :city', { city });
+    if (district) qb.andWhere('court.district = :district', { district });
+    qb.skip(skip).take(select);
+    return qb.getManyAndCount();
+  }
 }
 
 

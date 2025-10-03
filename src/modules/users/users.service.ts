@@ -62,7 +62,9 @@ export class UsersService extends BaseService<UserEntity> {
     if (status !== undefined) {
       query.andWhere('user.status = :status', { status });
     }
-    if (role) {
+    if (Array.isArray(role) && role.length > 0) {
+      query.andWhere('user.role IN (:...roles)', { roles: role });
+    } else if (typeof role === 'string' && role) {
       query.andWhere('user.role LIKE :role', { role: `%${role}%` });
     }
 
@@ -70,6 +72,13 @@ export class UsersService extends BaseService<UserEntity> {
 
     const [result, totalCount] = await query.getManyAndCount();
 
+    return [result, totalCount];
+  }
+
+  async getUserByParentId(parentId: number): Promise<[UserEntity[], number]> {
+    const query = this.usersRepository.createQueryBuilder('user');
+    query.where('user.parent_id = :parentId', { parentId });
+    const [result, totalCount] = await query.getManyAndCount();
     return [result, totalCount];
   }
 }

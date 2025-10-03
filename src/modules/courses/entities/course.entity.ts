@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('course')
@@ -25,7 +25,9 @@ export class CourseEntity extends BaseEntity {
   summary: string;
 
   @IsString()
-  @ApiProperty({ description: 'JSON string, e.g. { day: [2,3,4], hour: "14:00" }' })
+  @ApiProperty({
+    description: 'JSON string, e.g. { day: [2,3,4], hour: "14:00" }',
+  })
   @Column({ type: 'text' })
   schedule: string;
 
@@ -43,6 +45,14 @@ export class CourseEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })
   created_at: number;
+
+  @ApiProperty({
+    description: 'Course status: true=active, false=inactive',
+    default: true,
+  })
+  @IsBoolean()
+  @Column({ type: 'boolean', default: true })
+  status: boolean;
 }
 
 

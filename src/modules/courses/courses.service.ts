@@ -15,6 +15,28 @@ export class CoursesService extends BaseService<CourseEntity> {
   ) {
     super(coursesRepository);
   }
-}
 
+  async findFilteredPaginated(params: {
+    keyword?: string;
+    status?: string;
+    skip?: number;
+    select?: number;
+  }): Promise<[CourseEntity[], number]> {
+    const { keyword, status, skip = 0, select = 20 } = params || ({} as any);
+    const qb = this.coursesRepository.createQueryBuilder('course');
+
+    if (keyword) {
+      qb.andWhere('(course.course_name LIKE :kw OR course.summary LIKE :kw)', {
+        kw: `%${keyword}%`,
+      });
+    }
+    if (status !== undefined && status !== null && status !== '') {
+      const normalized = ['1', 'true', 1, true, 'TRUE'].includes(status as any);
+      qb.andWhere('course.status = :st', { st: normalized });
+    }
+
+    qb.skip(skip).take(select);
+    return qb.getManyAndCount();
+  }
+}
 

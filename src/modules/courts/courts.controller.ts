@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { sendResponse } from 'src/utils/response.util';
@@ -29,15 +29,30 @@ export class CourtsController {
 
   @Get()
   @ApiOperation({ summary: 'List Courts' })
-  async findAll(@Res() res: Response) {
+  @ApiQuery({ name: 'city', required: false })
+  @ApiQuery({ name: 'district', required: false })
+  @ApiQuery({ name: 'skip', required: false, description: 'Items to skip (offset)' })
+  @ApiQuery({ name: 'select', required: false, description: 'Items per page (limit)' })
+  async findAll(
+    @Res() res: Response,
+    @Query('city') city?: string,
+    @Query('district') district?: string,
+    @Query('skip') skip?: string,
+    @Query('select') select?: string,
+  ) {
     try {
-      const result = await this.courtsService.find();
+      const [result, totalCount] = await this.courtsService.findFilteredPaginated({
+        city,
+        district,
+        skip: skip ? Number(skip) : 0,
+        select: select ? Number(select) : 20,
+      });
       const mapped = result.map((r: any) => {
         const item = { courts_id: r.id, ...r } as any;
         delete item.id;
         return item;
       });
-      return sendResponse(res, HttpStatusCodes.OK, mapped, null);
+      return sendResponse(res, HttpStatusCodes.OK, { result: mapped, totalCount }, null);
     } catch (err) {
       return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
     }

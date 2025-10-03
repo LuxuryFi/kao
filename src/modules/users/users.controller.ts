@@ -1,26 +1,26 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Options,
-  Param,
-  Post,
-  Put,
-  Query,
-  Req,
-  Res,
-  UploadedFile,
-  UseInterceptors,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Options,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Res,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
+    ApiBody,
+    ApiConsumes,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
@@ -30,9 +30,9 @@ import { ALLOWED_ROLES } from 'src/constants/roles';
 import { sendResponse } from 'src/utils/response.util';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import {
-  CreateUserResponse,
-  GetUserResponse,
-  UpdateUserResponse,
+    CreateUserResponse,
+    GetUserResponse,
+    UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';
@@ -116,7 +116,7 @@ export class UserController {
     required: false,
     description: 'Filter by status',
   })
-  @ApiQuery({ name: 'role', required: false, description: 'Filter by role' })
+  @ApiQuery({ name: 'role', required: false, description: 'Filter by role(s). Accepts comma-separated or repeated query params', isArray: true, type: String })
   @ApiOperation({
     summary: 'Get Public Users',
   })
@@ -131,16 +131,36 @@ export class UserController {
       status,
     } = PaginationDto;
 
+    // normalize role to array if provided as comma-separated string or repeated keys
+    let roles: string[] | undefined = undefined;
+    if (Array.isArray(role)) {
+      roles = role as string[];
+    } else if (typeof role === 'string' && role.trim() !== '') {
+      roles = role.split(',').map((r) => r.trim()).filter(Boolean);
+    }
+
     const [result, totalCount] = await this.usersService.getUserByRole({
       select,
       skip,
-      role,
+      role: roles ?? role,
       username,
       email,
       name,
       status,
     });
     // Return the response with data and total count for pagination
+    return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
+  }
+
+  @Get('by-parent/:parentId')
+  @ApiOperation({
+    summary: 'Get Users by Parent ID',
+  })
+  async findByParent(
+    @Param('parentId') parentId: number,
+    @Res() res: Response,
+  ): Promise<object> {
+    const [result, totalCount] = await this.usersService.getUserByParentId(Number(parentId));
     return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
   }
 

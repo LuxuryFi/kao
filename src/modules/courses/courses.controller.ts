@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { sendResponse } from 'src/utils/response.util';
@@ -26,10 +26,25 @@ export class CoursesController {
 
   @Get()
   @ApiOperation({ summary: 'List Courses' })
-  async findAll(@Res() res: Response) {
+  @ApiQuery({ name: 'keyword', required: false, description: 'Search in course_name or summary' })
+  @ApiQuery({ name: 'status', required: false, description: 'Filter by status (true/false or 1/0)' })
+  @ApiQuery({ name: 'skip', required: false, description: 'Items to skip (offset)' })
+  @ApiQuery({ name: 'select', required: false, description: 'Items per page (limit)' })
+  async findAll(
+    @Res() res: Response,
+    @Query('keyword') keyword?: string,
+    @Query('status') status?: string,
+    @Query('skip') skip?: string,
+    @Query('select') select?: string,
+  ) {
     try {
-      const result = await this.coursesService.find();
-      return sendResponse(res, HttpStatusCodes.OK, result, null);
+      const [result, totalCount] = await this.coursesService.findFilteredPaginated({
+        keyword,
+        status,
+        skip: skip ? Number(skip) : 0,
+        select: select ? Number(select) : 20,
+      });
+      return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
     } catch (err) {
       return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
     }

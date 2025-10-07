@@ -7,10 +7,6 @@ export class CreateCourseDto {
   course_name: string;
 
   @ApiProperty()
-  @IsNumber()
-  quantity: number;
-
-  @ApiProperty()
   @IsString()
   @IsOptional()
   summary: string;
@@ -23,9 +19,9 @@ export class CreateCourseDto {
   @IsNumber()
   expired: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()
-  price: number;
+  court_id: number;
 }
 
 export class UpdateCourseDto {
@@ -38,10 +34,6 @@ export class UpdateCourseDto {
   course_name: string;
 
   @ApiProperty()
-  @IsNumber()
-  quantity: number;
-
-  @ApiProperty()
   @IsString()
   @IsOptional()
   summary: string;
@@ -54,9 +46,9 @@ export class UpdateCourseDto {
   @IsNumber()
   expired: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()
-  price: number;
+  court_id: number;
 }
 
 export class DeleteCourseDto {

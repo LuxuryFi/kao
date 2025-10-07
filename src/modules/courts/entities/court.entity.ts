@@ -38,6 +38,11 @@ export class CourtEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })
   created_at: number;
+
+  @ApiProperty({ type: Date, description: 'Last update date' })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
+  updated_date?: Date;
 }
 
 

@@ -14,11 +14,6 @@ export class CourseEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 256 })
   course_name: string;
 
-  @IsNumber()
-  @ApiProperty()
-  @Column({ type: 'int' })
-  quantity: number;
-
   @IsString()
   @ApiProperty()
   @Column({ type: 'text', nullable: true })
@@ -36,15 +31,15 @@ export class CourseEntity extends BaseEntity {
   @Column({ type: 'int' })
   expired: number;
 
-  @IsNumber()
-  @ApiProperty()
-  @Column({ type: 'bigint' })
-  price: number;
-
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })
   created_at: number;
+
+  @ApiProperty({ description: 'Court ID this course belongs to' })
+  @IsNumber()
+  @Column({ type: 'int' })
+  court_id: number;
 
   @ApiProperty({
     description: 'Course status: true=active, false=inactive',
@@ -53,6 +48,9 @@ export class CourseEntity extends BaseEntity {
   @IsBoolean()
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  @ApiProperty({ type: Date, description: 'Last update date' })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
+  updated_date?: Date;
 }
-
-

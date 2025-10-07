@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-    IsBoolean,
-    IsEmail,
-    IsNumber,
-    IsOptional,
-    IsString,
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -91,4 +91,15 @@ export class UserEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'int', nullable: true })
   parent_id?: number;
+
+  @ApiProperty({ description: 'Phone number', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'text', nullable: true })
+  phone?: string;
+
+  @ApiProperty({ type: Date, description: 'Last update date' })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
+  updated_date?: Date;
 }

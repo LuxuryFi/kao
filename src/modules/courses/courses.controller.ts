@@ -1,10 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { sendResponse } from 'src/utils/response.util';
 import { CoursesService } from './courses.service';
-import { CreateCourseDto, DeleteCourseDto, UpdateCourseDto } from './dto/course.dto';
+import {
+  CreateCourseDto,
+  DeleteCourseDto,
+  UpdateCourseDto,
+} from './dto/course.dto';
 
 @Controller('courses')
 @ApiTags('Courses')
@@ -20,33 +34,72 @@ export class CoursesController {
       const result = await this.coursesService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
   @Get()
   @ApiOperation({ summary: 'List Courses' })
-  @ApiQuery({ name: 'keyword', required: false, description: 'Search in course_name or summary' })
-  @ApiQuery({ name: 'status', required: false, description: 'Filter by status (true/false or 1/0)' })
-  @ApiQuery({ name: 'skip', required: false, description: 'Items to skip (offset)' })
-  @ApiQuery({ name: 'select', required: false, description: 'Items per page (limit)' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    description: 'Search in course_name or summary',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by status (true/false or 1/0)',
+  })
+  @ApiQuery({
+    name: 'court_id',
+    required: false,
+    description: 'Filter by court ID',
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    description: 'Items to skip (offset)',
+  })
+  @ApiQuery({
+    name: 'select',
+    required: false,
+    description: 'Items per page (limit)',
+  })
   async findAll(
     @Res() res: Response,
     @Query('keyword') keyword?: string,
     @Query('status') status?: string,
+    @Query('court_id') court_id?: string,
     @Query('skip') skip?: string,
     @Query('select') select?: string,
   ) {
     try {
-      const [result, totalCount] = await this.coursesService.findFilteredPaginated({
-        keyword,
-        status,
-        skip: skip ? Number(skip) : 0,
-        select: select ? Number(select) : 20,
-      });
-      return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
+      const [result, totalCount] =
+        await this.coursesService.findFilteredPaginated({
+          keyword,
+          status,
+          court_id: court_id ? Number(court_id) : undefined,
+          skip: skip ? Number(skip) : 0,
+          select: select ? Number(select) : 20,
+        });
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { result, totalCount },
+        null,
+      );
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -54,13 +107,25 @@ export class CoursesController {
   @ApiOperation({ summary: 'Get Course by ID' })
   async findOne(@Param('id') id: number, @Res() res: Response) {
     try {
-      const result = await this.coursesService.findOne({ where: { id: Number(id) } });
+      const result = await this.coursesService.findOne({
+        where: { id: Number(id) },
+      });
       if (!result) {
-        return sendResponse(res, HttpStatusCodes.NOT_FOUND, null, 'Course not found');
+        return sendResponse(
+          res,
+          HttpStatusCodes.NOT_FOUND,
+          null,
+          'Course not found',
+        );
       }
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -70,10 +135,17 @@ export class CoursesController {
     try {
       const { course_id, ...rest } = data as any;
       await this.coursesService.update(course_id, rest);
-      const updated = await this.coursesService.findOne({ where: { id: course_id } });
+      const updated = await this.coursesService.findOne({
+        where: { id: course_id },
+      });
       return sendResponse(res, HttpStatusCodes.OK, updated, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -85,9 +157,12 @@ export class CoursesController {
       await this.coursesService.delete(course_id);
       return sendResponse(res, HttpStatusCodes.OK, true, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 }
-
-

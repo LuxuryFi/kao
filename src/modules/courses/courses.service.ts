@@ -19,10 +19,17 @@ export class CoursesService extends BaseService<CourseEntity> {
   async findFilteredPaginated(params: {
     keyword?: string;
     status?: string;
+    court_id?: number;
     skip?: number;
     select?: number;
   }): Promise<[CourseEntity[], number]> {
-    const { keyword, status, skip = 0, select = 20 } = params || ({} as any);
+    const {
+      keyword,
+      status,
+      court_id,
+      skip = 0,
+      select = 20,
+    } = params || ({} as any);
     const qb = this.coursesRepository.createQueryBuilder('course');
 
     if (keyword) {
@@ -34,9 +41,11 @@ export class CoursesService extends BaseService<CourseEntity> {
       const normalized = ['1', 'true', 1, true, 'TRUE'].includes(status as any);
       qb.andWhere('course.status = :st', { st: normalized });
     }
+    if (court_id !== undefined && court_id !== null) {
+      qb.andWhere('course.court_id = :court_id', { court_id });
+    }
 
     qb.skip(skip).take(select);
     return qb.getManyAndCount();
   }
 }
-

@@ -228,6 +228,7 @@ export class UserController {
         role,
         phone,
         parent_id,
+        status_reason,
       } = data;
 
       if (role && !ALLOWED_ROLES.includes(role)) {
@@ -260,6 +261,9 @@ export class UserController {
       // Only add optional fields if they have valid values
       if (phone) {
         payload.phone = phone;
+      }
+      if (status_reason !== undefined && status_reason !== null) {
+        payload.status_reason = status_reason;
       }
 
       // Only add parent_id if it's a valid positive number
@@ -329,6 +333,7 @@ export class UserController {
         end_date,
         phone,
         parent_id,
+        status_reason,
       } = data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
@@ -354,6 +359,9 @@ export class UserController {
       // Only add optional fields if they have values
       if (phone !== undefined) {
         payload.phone = phone;
+      }
+      if (status_reason !== undefined && status_reason !== null) {
+        payload.status_reason = status_reason;
       }
 
       // Only add parent_id if it's a valid positive number

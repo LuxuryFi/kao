@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
-  IsEmail,
-  IsNumber,
-  IsOptional,
-  IsString,
+    IsBoolean,
+    IsEmail,
+    IsNumber,
+    IsOptional,
+    IsString,
 } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -63,6 +63,12 @@ export class UserEntity extends BaseEntity {
   @ApiProperty()
   @Column({ type: 'boolean', nullable: true, default: 1 })
   status: boolean;
+
+  @ApiProperty({ description: 'Status reason code', required: false })
+  @IsNumber()
+  @IsOptional()
+  @Column({ type: 'int', nullable: true })
+  status_reason?: number;
 
   @IsBoolean()
   @ApiProperty({ nullable: true, description: 'gender' })

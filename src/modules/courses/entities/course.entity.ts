@@ -26,11 +26,6 @@ export class CourseEntity extends BaseEntity {
   @Column({ type: 'text' })
   schedule: string;
 
-  @IsNumber()
-  @ApiProperty({ description: 'Expiration in months' })
-  @Column({ type: 'int' })
-  expired: number;
-
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })

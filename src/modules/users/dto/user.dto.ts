@@ -71,6 +71,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsNumber()
   parent_id?: number;
+
+  @ApiProperty({ description: 'Status reason code', required: false })
+  @IsOptional()
+  @IsNumber()
+  status_reason?: number;
 }
 
 export class UpdateUserDto {
@@ -128,4 +133,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   parent_id?: number;
+
+  @ApiProperty({ description: 'Status reason code', required: false })
+  @IsOptional()
+  @IsNumber()
+  status_reason?: number;
 }

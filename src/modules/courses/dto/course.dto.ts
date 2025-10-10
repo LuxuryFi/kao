@@ -15,10 +15,6 @@ export class CreateCourseDto {
   @IsString()
   schedule: string;
 
-  @ApiProperty({ description: 'Expiration in months' })
-  @IsNumber()
-  expired: number;
-
   @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()
   court_id: number;
@@ -41,10 +37,6 @@ export class UpdateCourseDto {
   @ApiProperty({ description: 'JSON string { day: [2,3,4], hour: "14:00" }' })
   @IsString()
   schedule: string;
-
-  @ApiProperty({ description: 'Expiration in months' })
-  @IsNumber()
-  expired: number;
 
   @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()

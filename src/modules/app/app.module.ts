@@ -9,6 +9,7 @@ import { getMetadataArgsStorage } from 'typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '../config/config.module';
 import { CONFIG } from '../config/config.provider';
+import { CourseStudentsModule } from '../course-students/course-students.module';
 import { CoursesModule } from '../courses/courses.module';
 import { CourtsModule } from '../courts/courts.module';
 import { PackagesModule } from '../packages/packages.module';
@@ -42,6 +43,7 @@ import { AppService } from './app.service';
     UserModule,
     CourtsModule,
     CoursesModule,
+    CourseStudentsModule,
     PackagesModule,
   ],
   controllers: [AppController],

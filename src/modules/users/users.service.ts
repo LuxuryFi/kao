@@ -42,23 +42,38 @@ export class UsersService extends BaseService<UserEntity> {
       username,
       email,
       name,
+      phone,
+      keyword,
       status,
       role,
     } = payload;
 
     const query = this.usersRepository.createQueryBuilder('user');
 
-    if (username) {
-      query.andWhere('user.username LIKE :username', {
-        username: `%${username}%`,
-      });
+    // If keyword is provided, search across name, email, and phone
+    if (keyword) {
+      query.andWhere(
+        '(user.name LIKE :keyword OR user.email LIKE :keyword OR user.phone LIKE :keyword)',
+        { keyword: `%${keyword}%` },
+      );
+    } else {
+      // Individual filters only apply when no keyword is provided
+      if (username) {
+        query.andWhere('user.username LIKE :username', {
+          username: `%${username}%`,
+        });
+      }
+      if (email) {
+        query.andWhere('user.email LIKE :email', { email: `%${email}%` });
+      }
+      if (name) {
+        query.andWhere('user.name LIKE :name', { name: `%${name}%` });
+      }
+      if (phone) {
+        query.andWhere('user.phone LIKE :phone', { phone: `%${phone}%` });
+      }
     }
-    if (email) {
-      query.andWhere('user.email LIKE :email', { email: `%${email}%` });
-    }
-    if (name) {
-      query.andWhere('user.name LIKE :name', { name: `%${name}%` });
-    }
+
     if (status !== undefined) {
       query.andWhere('user.status = :status', { status });
     }

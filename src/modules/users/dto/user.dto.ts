@@ -29,9 +29,9 @@ export class CreateUserDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ required: false })
   @IsOptional()
+  @IsString()
   url: string;
 
   @ApiProperty()
@@ -86,7 +86,8 @@ export class UpdateUserDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   url: string;
 

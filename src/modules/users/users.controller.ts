@@ -1,26 +1,26 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Options,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res,
-    UploadedFile,
-    UseInterceptors,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Options,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-    ApiBody,
-    ApiConsumes,
-    ApiOkResponse,
-    ApiOperation,
-    ApiQuery,
-    ApiTags,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
@@ -30,9 +30,9 @@ import { ALLOWED_ROLES } from 'src/constants/roles';
 import { sendResponse } from 'src/utils/response.util';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import {
-    CreateUserResponse,
-    GetUserResponse,
-    UpdateUserResponse,
+  CreateUserResponse,
+  GetUserResponse,
+  UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';
@@ -111,12 +111,25 @@ export class UserController {
   })
   @ApiQuery({ name: 'email', required: false, description: 'Filter by email' })
   @ApiQuery({ name: 'name', required: false, description: 'Filter by name' })
+  @ApiQuery({ name: 'phone', required: false, description: 'Filter by phone' })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    description: 'Search keyword for name, email, or phone',
+  })
   @ApiQuery({
     name: 'status',
     required: false,
     description: 'Filter by status',
   })
-  @ApiQuery({ name: 'role', required: false, description: 'Filter by role(s). Accepts comma-separated or repeated query params', isArray: true, type: String })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    description:
+      'Filter by role(s). Accepts comma-separated or repeated query params',
+    isArray: true,
+    type: String,
+  })
   @ApiOperation({
     summary: 'Get Public Users',
   })
@@ -128,6 +141,8 @@ export class UserController {
       username,
       email,
       name,
+      phone,
+      keyword,
       status,
     } = PaginationDto;
 
@@ -136,7 +151,10 @@ export class UserController {
     if (Array.isArray(role)) {
       roles = role as string[];
     } else if (typeof role === 'string' && role.trim() !== '') {
-      roles = role.split(',').map((r) => r.trim()).filter(Boolean);
+      roles = role
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean);
     }
 
     const [result, totalCount] = await this.usersService.getUserByRole({
@@ -146,6 +164,8 @@ export class UserController {
       username,
       email,
       name,
+      phone,
+      keyword,
       status,
     });
     // Return the response with data and total count for pagination
@@ -160,7 +180,9 @@ export class UserController {
     @Param('parentId') parentId: number,
     @Res() res: Response,
   ): Promise<object> {
-    const [result, totalCount] = await this.usersService.getUserByParentId(Number(parentId));
+    const [result, totalCount] = await this.usersService.getUserByParentId(
+      Number(parentId),
+    );
     return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
   }
 
@@ -204,6 +226,8 @@ export class UserController {
         start_date,
         end_date,
         role,
+        phone,
+        parent_id,
       } = data;
 
       if (role && !ALLOWED_ROLES.includes(role)) {
@@ -214,10 +238,11 @@ export class UserController {
           `Invalid role. Allowed roles: ${ALLOWED_ROLES.join(', ')}`,
         );
       }
+
       const currentTimestamp = Math.floor(Date.now() / 1000); // Or use ms if you're storing milliseconds
 
       const hashedPassword = bcrypt.hashSync(password, 10);
-      const payload = {
+      const payload: any = {
         password: hashedPassword,
         username,
         start_date,
@@ -231,6 +256,28 @@ export class UserController {
         url,
         status: 1,
       };
+
+      // Only add optional fields if they have valid values
+      if (phone) {
+        payload.phone = phone;
+      }
+
+      // Only add parent_id if it's a valid positive number
+      if (parent_id && Number(parent_id) > 0) {
+        // Validate that parent user exists
+        const parentUser = await this.usersService.findOne({
+          where: { id: Number(parent_id) },
+        });
+        if (!parentUser) {
+          return sendResponse(
+            res,
+            HttpStatusCodes.BAD_REQUEST,
+            null,
+            `Parent user with id ${parent_id} does not exist`,
+          );
+        }
+        payload.parent_id = Number(parent_id);
+      }
 
       const validate = await this.usersService.validateUser(payload);
 
@@ -280,6 +327,8 @@ export class UserController {
         role,
         start_date,
         end_date,
+        phone,
+        parent_id,
       } = data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(
@@ -290,7 +339,7 @@ export class UserController {
         );
       }
 
-      const payload = {
+      const payload: any = {
         address,
         email,
         gender,
@@ -301,6 +350,31 @@ export class UserController {
         end_date,
         role,
       };
+
+      // Only add optional fields if they have values
+      if (phone !== undefined) {
+        payload.phone = phone;
+      }
+
+      // Only add parent_id if it's a valid positive number
+      if (parent_id && Number(parent_id) > 0) {
+        // Validate that parent user exists
+        const parentUser = await this.usersService.findOne({
+          where: { id: Number(parent_id) },
+        });
+        if (!parentUser) {
+          return sendResponse(
+            res,
+            HttpStatusCodes.BAD_REQUEST,
+            null,
+            `Parent user with id ${parent_id} does not exist`,
+          );
+        }
+        payload.parent_id = Number(parent_id);
+      } else if (parent_id === null) {
+        // Allow explicitly setting parent_id to null to remove parent relationship
+        payload.parent_id = null;
+      }
 
       const result = await this.usersService.update(id, payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null); // Use 201 Created for successful user creation

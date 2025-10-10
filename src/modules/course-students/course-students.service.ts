@@ -43,19 +43,34 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     return qb.getManyAndCount();
   }
 
-  async findByStudentId(studentId: number): Promise<[CourseStudentEntity[], number]> {
-    const qb = this.courseStudentsRepository.createQueryBuilder('course_student');
-    qb.where('course_student.student_id = :studentId', { studentId });
-    return qb.getManyAndCount();
+  async findByStudentId(studentId: number): Promise<any[]> {
+    // Get courses with details for a student
+    const result = await this.courseStudentsRepository
+      .createQueryBuilder('course_student')
+      .leftJoinAndSelect('course', 'course', 'course.id = course_student.course_id')
+      .where('course_student.student_id = :studentId', { studentId })
+      .select([
+        'course_student.id as id',
+        'course_student.student_id as student_id',
+        'course_student.course_id as course_id',
+        'course_student.status as status',
+        'course_student.created_at as created_at',
+        'course_student.updated_date as updated_date',
+        'course.id as course_id_detail',
+        'course.course_name as course_name',
+        'course.summary as summary',
+        'course.schedule as schedule',
+        'course.court_id as court_id',
+        'course.status as course_status',
+        'course.created_at as course_created_at',
+      ])
+      .getRawMany();
+
+    return result;
   }
 
-  async findByCourseId(courseId: number): Promise<[CourseStudentEntity[], number]> {
-    const qb = this.courseStudentsRepository.createQueryBuilder('course_student');
-    qb.where('course_student.course_id = :courseId', { courseId });
-    return qb.getManyAndCount();
-  }
-
-  async findStudentsByCourseId(courseId: number): Promise<any[]> {
+  async findByCourseId(courseId: number): Promise<any[]> {
+    // Get students with user details for a course
     const result = await this.courseStudentsRepository
       .createQueryBuilder('course_student')
       .leftJoinAndSelect('public_user', 'user', 'user.id = course_student.student_id')
@@ -79,31 +94,6 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
         'user.status as user_status',
         'user.start_date as start_date',
         'user.end_date as end_date',
-      ])
-      .getRawMany();
-
-    return result;
-  }
-
-  async findCoursesByStudentId(studentId: number): Promise<any[]> {
-    const result = await this.courseStudentsRepository
-      .createQueryBuilder('course_student')
-      .leftJoinAndSelect('course', 'course', 'course.id = course_student.course_id')
-      .where('course_student.student_id = :studentId', { studentId })
-      .select([
-        'course_student.id as id',
-        'course_student.student_id as student_id',
-        'course_student.course_id as course_id',
-        'course_student.status as status',
-        'course_student.created_at as created_at',
-        'course_student.updated_date as updated_date',
-        'course.id as course_id_detail',
-        'course.course_name as course_name',
-        'course.summary as summary',
-        'course.schedule as schedule',
-        'course.court_id as court_id',
-        'course.status as course_status',
-        'course.created_at as course_created_at',
       ])
       .getRawMany();
 

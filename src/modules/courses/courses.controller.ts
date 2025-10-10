@@ -1,13 +1,13 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  Res,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -15,9 +15,9 @@ import { HttpStatusCodes } from 'src/constants/common';
 import { sendResponse } from 'src/utils/response.util';
 import { CoursesService } from './courses.service';
 import {
-  CreateCourseDto,
-  DeleteCourseDto,
-  UpdateCourseDto,
+    CreateCourseDto,
+    DeleteCourseDto,
+    UpdateCourseDto,
 } from './dto/course.dto';
 
 @Controller('courses')

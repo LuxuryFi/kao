@@ -1,33 +1,33 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  Res,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Res,
 } from '@nestjs/common';
 import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { sendResponse } from 'src/utils/response.util';
 import { CourseStudentsService } from './course-students.service';
 import {
-  CreateCourseStudentDto,
-  DeleteCourseStudentDto,
-  UpdateCourseStudentDto,
+    CreateCourseStudentDto,
+    DeleteCourseStudentDto,
+    UpdateCourseStudentDto,
 } from './dto/course-student.dto';
 import {
-  CreateCourseStudentResponse,
-  GetCourseStudentResponse,
-  UpdateCourseStudentResponse,
+    CreateCourseStudentResponse,
+    GetCourseStudentResponse,
+    UpdateCourseStudentResponse,
 } from './response/course-student.response';
 
 @Controller('course-students')
@@ -121,68 +121,18 @@ export class CourseStudentsController {
   }
 
   @Get('by-student/:studentId')
-  @ApiOperation({ summary: 'Get Course Students by Student ID' })
+  @ApiOperation({
+    summary: 'Get Courses by Student ID',
+    description:
+      'Returns courses with full course details for a specific student.',
+  })
   async findByStudent(
     @Param('studentId') studentId: number,
     @Res() res: Response,
   ) {
     try {
-      const [result, totalCount] =
-        await this.courseStudentsService.findByStudentId(Number(studentId));
-      return sendResponse(
-        res,
-        HttpStatusCodes.OK,
-        { result, totalCount },
-        null,
-      );
-    } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
-      );
-    }
-  }
-
-  @Get('by-course/:courseId')
-  @ApiOperation({ summary: 'Get Course Students by Course ID' })
-  async findByCourse(
-    @Param('courseId') courseId: number,
-    @Res() res: Response,
-  ) {
-    try {
-      const [result, totalCount] =
-        await this.courseStudentsService.findByCourseId(Number(courseId));
-      return sendResponse(
-        res,
-        HttpStatusCodes.OK,
-        { result, totalCount },
-        null,
-      );
-    } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
-      );
-    }
-  }
-
-  @Get('students-by-course/:courseId')
-  @ApiOperation({
-    summary: 'Get Students with User Details by Course ID',
-    description:
-      'Returns student information including user details (name, email, phone, etc.) for a specific course. Password and sensitive data are excluded.',
-  })
-  async getStudentsByCourse(
-    @Param('courseId') courseId: number,
-    @Res() res: Response,
-  ) {
-    try {
-      const result = await this.courseStudentsService.findStudentsByCourseId(
-        Number(courseId),
+      const result = await this.courseStudentsService.findByStudentId(
+        Number(studentId),
       );
       return sendResponse(
         res,
@@ -200,19 +150,19 @@ export class CourseStudentsController {
     }
   }
 
-  @Get('courses-by-student/:studentId')
+  @Get('by-course/:courseId')
   @ApiOperation({
-    summary: 'Get Courses with Details by Student ID',
+    summary: 'Get Students by Course ID',
     description:
-      'Returns course information with full course details for a specific student.',
+      'Returns students with full user details (name, email, phone, etc.) for a specific course. Password and sensitive data are excluded.',
   })
-  async getCoursesByStudent(
-    @Param('studentId') studentId: number,
+  async findByCourse(
+    @Param('courseId') courseId: number,
     @Res() res: Response,
   ) {
     try {
-      const result = await this.courseStudentsService.findCoursesByStudentId(
-        Number(studentId),
+      const result = await this.courseStudentsService.findByCourseId(
+        Number(courseId),
       );
       return sendResponse(
         res,

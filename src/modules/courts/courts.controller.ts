@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
+import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CourtsService } from './courts.service';
 import { CreateCourtDto, DeleteCourtDto, UpdateCourtDto } from './dto/court.dto';
@@ -12,11 +13,13 @@ export class CourtsController {
   constructor(private readonly courtsService: CourtsService) {}
 
   @Post()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Create Court' })
-  async create(@Body() data: CreateCourtDto, @Res() res: Response) {
+  async create(@Body() data: CreateCourtDto, @Res() res: Response, @Req() req: any) {
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const payload = { ...data, created_at: currentTimestamp } as any;
+      const createdBy = req.user?.username || 'system';
+      const payload = { ...data, created_at: currentTimestamp, created_by: createdBy } as any;
       const result = await this.courtsService.store(payload);
       // map id -> courts_id in response
       const mapped = { courts_id: result.id, ...result } as any;
@@ -78,11 +81,13 @@ export class CourtsController {
   }
 
   @Put()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Update Court' })
-  async update(@Body() data: UpdateCourtDto, @Res() res: Response) {
+  async update(@Body() data: UpdateCourtDto, @Res() res: Response, @Req() req: any) {
     try {
       const { courts_id, ...rest } = data as any;
-      await this.courtsService.update(courts_id, rest);
+      const updatedBy = req.user?.username || 'system';
+      await this.courtsService.update(courts_id, { ...rest, updated_by: updatedBy });
       const updated = await this.courtsService.findOne({ where: { id: courts_id } });
       const mapped = updated ? ({ courts_id: updated.id, ...updated } as any) : null;
       if (mapped) delete (mapped as any).id;

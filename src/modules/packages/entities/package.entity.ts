@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('package')
@@ -41,4 +41,16 @@ export class PackageEntity extends BaseEntity {
   @IsBoolean()
   @Column({ type: 'tinyint', default: 1 })
   status: number;
+
+  @ApiProperty({ description: 'Created by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  created_by?: string;
+
+  @ApiProperty({ description: 'Updated by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  updated_by?: string;
 }

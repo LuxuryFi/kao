@@ -7,7 +7,9 @@ import {
     Post,
     Put,
     Query,
+    Req,
     Res,
+    UseGuards,
 } from '@nestjs/common';
 import {
     ApiOkResponse,
@@ -17,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
+import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CourseStudentsService } from './course-students.service';
 import {
@@ -38,15 +41,18 @@ export class CourseStudentsController {
   ) {}
 
   @Post()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Create Course Student' })
   @ApiOkResponse({ type: CreateCourseStudentResponse })
-  async create(@Body() data: CreateCourseStudentDto, @Res() res: Response) {
+  async create(@Body() data: CreateCourseStudentDto, @Res() res: Response, @Req() req: any) {
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
+      const createdBy = req.user?.username || 'system';
       const payload = {
         ...data,
         created_at: currentTimestamp,
         status: data.status !== undefined ? data.status : true,
+        created_by: createdBy,
       } as any;
       const result = await this.courseStudentsService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
@@ -208,12 +214,14 @@ export class CourseStudentsController {
   }
 
   @Put()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Update Course Student' })
   @ApiOkResponse({ type: UpdateCourseStudentResponse })
-  async update(@Body() data: UpdateCourseStudentDto, @Res() res: Response) {
+  async update(@Body() data: UpdateCourseStudentDto, @Res() res: Response, @Req() req: any) {
     try {
       const { id, ...rest } = data as any;
-      await this.courseStudentsService.update(id, rest);
+      const updatedBy = req.user?.username || 'system';
+      await this.courseStudentsService.update(id, { ...rest, updated_by: updatedBy });
       const updated = await this.courseStudentsService.findOne({
         where: { id },
       });

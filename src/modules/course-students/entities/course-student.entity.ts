@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('course_student')
@@ -36,5 +36,17 @@ export class CourseStudentEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'bigint', nullable: true, default: () => 'UNIX_TIMESTAMP()' })
   created_at?: number;
+
+  @ApiProperty({ description: 'Created by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  created_by?: string;
+
+  @ApiProperty({ description: 'Updated by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  updated_by?: string;
 }
 

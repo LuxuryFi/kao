@@ -48,4 +48,16 @@ export class CourseEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
   updated_date?: Date;
+
+  @ApiProperty({ description: 'Created by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  created_by?: string;
+
+  @ApiProperty({ description: 'Updated by username', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 256, nullable: true })
+  updated_by?: string;
 }

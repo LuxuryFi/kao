@@ -1,38 +1,40 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Options,
-  Param,
-  Post,
-  Put,
-  Query,
-  Req,
-  Res,
-  UploadedFile,
-  UseInterceptors,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Options,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Res,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
+    ApiBody,
+    ApiConsumes,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { Errors } from 'src/constants/errors';
 import { ALLOWED_ROLES } from 'src/constants/roles';
+import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import {
-  CreateUserResponse,
-  GetUserResponse,
-  UpdateUserResponse,
+    CreateUserResponse,
+    GetUserResponse,
+    UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';
@@ -207,13 +209,14 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({
     summary: 'Create Public User',
   })
   @ApiOkResponse({
     type: CreateUserResponse,
   })
-  async create(@Body() data: CreateUserDto, @Res() res: Response) {
+  async create(@Body() data: CreateUserDto, @Res() res: Response, @Req() req: any) {
     try {
       const {
         password,
@@ -241,6 +244,7 @@ export class UserController {
       }
 
       const currentTimestamp = Math.floor(Date.now() / 1000); // Or use ms if you're storing milliseconds
+      const createdBy = req.user?.username || 'system';
 
       const hashedPassword = bcrypt.hashSync(password, 10);
       const payload: any = {
@@ -256,6 +260,7 @@ export class UserController {
         created_at: currentTimestamp,
         url,
         status: 1,
+        created_by: createdBy,
       };
 
       // Only add optional fields if they have valid values
@@ -309,6 +314,7 @@ export class UserController {
   }
 
   @Put(':id')
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({
     summary: 'Update Public User',
   })
@@ -319,6 +325,7 @@ export class UserController {
     @Body() data: UpdateUserDto,
     @Param('id') id: number,
     @Res() res: Response,
+    @Req() req: any,
   ) {
     try {
       const {
@@ -344,6 +351,8 @@ export class UserController {
         );
       }
 
+      const updatedBy = req.user?.username || 'system';
+
       const payload: any = {
         address,
         email,
@@ -354,6 +363,7 @@ export class UserController {
         start_date,
         end_date,
         role,
+        updated_by: updatedBy,
       };
 
       // Only add optional fields if they have values

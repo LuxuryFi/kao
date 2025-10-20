@@ -1,23 +1,26 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-    Query,
-    Res,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
+import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CoursesService } from './courses.service';
 import {
-    CreateCourseDto,
-    DeleteCourseDto,
-    UpdateCourseDto,
+  CreateCourseDto,
+  DeleteCourseDto,
+  UpdateCourseDto,
 } from './dto/course.dto';
 
 @Controller('courses')
@@ -26,11 +29,17 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Post()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Create Course' })
-  async create(@Body() data: CreateCourseDto, @Res() res: Response) {
+  async create(@Body() data: CreateCourseDto, @Res() res: Response, @Req() req: any) {
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const payload = { ...data, created_at: currentTimestamp } as any;
+      const createdBy = req.user?.username || 'system';
+      const payload = {
+        ...data,
+        created_at: currentTimestamp,
+        created_by: createdBy,
+      } as any;
       const result = await this.coursesService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
@@ -130,11 +139,13 @@ export class CoursesController {
   }
 
   @Put()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Update Course' })
-  async update(@Body() data: UpdateCourseDto, @Res() res: Response) {
+  async update(@Body() data: UpdateCourseDto, @Res() res: Response, @Req() req: any) {
     try {
       const { course_id, ...rest } = data as any;
-      await this.coursesService.update(course_id, rest);
+      const updatedBy = req.user?.username || 'system';
+      await this.coursesService.update(course_id, { ...rest, updated_by: updatedBy });
       const updated = await this.coursesService.findOne({
         where: { id: course_id },
       });

@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
+import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CreatePackageDto, DeletePackageDto, UpdatePackageDto } from './dto/package.dto';
 import { PackagesService } from './packages.service';
@@ -12,10 +13,13 @@ export class PackagesController {
   constructor(private readonly packagesService: PackagesService) {}
 
   @Post()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Create Package' })
-  async create(@Body() data: CreatePackageDto, @Res() res: Response) {
+  async create(@Body() data: CreatePackageDto, @Res() res: Response, @Req() req: any) {
     try {
-      const result = await this.packagesService.store(data);
+      const createdBy = req.user?.username || 'system';
+      const payload = { ...data, created_by: createdBy };
+      const result = await this.packagesService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
       return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
@@ -63,11 +67,13 @@ export class PackagesController {
   }
 
   @Put()
+  @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Update Package' })
-  async update(@Body() data: UpdatePackageDto, @Res() res: Response) {
+  async update(@Body() data: UpdatePackageDto, @Res() res: Response, @Req() req: any) {
     try {
       const { package_id, ...rest } = data as any;
-      await this.packagesService.update(package_id, rest);
+      const updatedBy = req.user?.username || 'system';
+      await this.packagesService.update(package_id, { ...rest, updated_by: updatedBy });
       const updated = await this.packagesService.findOne({ where: { package_id } });
       return sendResponse(res, HttpStatusCodes.OK, updated, null);
     } catch (err) {

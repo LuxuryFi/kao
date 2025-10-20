@@ -10,10 +10,6 @@ class BaseCourseResponse {
   @ApiProperty({ description: 'Course name' })
   course_name: string;
 
-  @IsNumber()
-  @ApiProperty({ description: 'Quantity (e.g., lessons)' })
-  quantity: number;
-
   @IsString()
   @ApiProperty({ description: 'Summary' })
   summary: string;
@@ -23,12 +19,23 @@ class BaseCourseResponse {
   schedule: string;
 
   @IsNumber()
-  @ApiProperty({ description: 'Expiration in months' })
-  expired: number;
+  @ApiProperty({ description: 'Court ID this course belongs to' })
+  court_id: number;
 
-  @IsNumber()
-  @ApiProperty({ description: 'Price' })
-  price: number;
+  @ApiProperty({ description: 'Course status: true=active, false=inactive' })
+  status: boolean;
+
+  @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
+  created_at?: number;
+
+  @ApiProperty({ type: Date, description: 'Last update date' })
+  updated_date?: Date;
+
+  @ApiProperty({ description: 'Created by username', required: false })
+  created_by?: string;
+
+  @ApiProperty({ description: 'Updated by username', required: false })
+  updated_by?: string;
 }
 
 export class CreateCourseResponse extends BaseCourseResponse {}

@@ -21,21 +21,22 @@ import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
-import {
-  CreateCustomerDto,
-  UpdateCustomerDto
-} from './dto/customer.dto';
+import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
 import {
   CreateCustomerResponse,
   GetCustomerResponse,
   UpdateCustomerResponse,
 } from './response/customer.response';
 
+import { UsersService } from '../users/users.service';
 import { CustomersService } from './customers.service';
 @Controller('customers')
 @ApiTags('Customers')
 export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+  constructor(
+    private readonly customersService: CustomersService,
+    private readonly userService: UsersService,
+  ) {}
 
   @Get('')
   @ApiQuery({ name: 'skip', required: false, description: 'Page number' })
@@ -92,19 +93,17 @@ export class CustomersController {
         .filter(Boolean);
     }
 
-    const [result, totalCount] = await this.customersService.getCustomerByRole(
-      {
-        select,
-        skip,
-        role: roles ?? role,
-        username,
-        email,
-        name,
-        phone,
-        keyword,
-        status,
-      },
-    );
+    const [result, totalCount] = await this.customersService.getCustomerByRole({
+      select,
+      skip,
+      role: roles ?? role,
+      username,
+      email,
+      name,
+      phone,
+      keyword,
+      status,
+    });
     return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
   }
 
@@ -165,10 +164,9 @@ export class CustomersController {
         start_date,
         end_date,
         phone,
-        parent_id,
+        sale_id,
         status_reason,
       } = data;
-
 
       const currentTimestamp = Math.floor(Date.now() / 1000);
 
@@ -196,19 +194,19 @@ export class CustomersController {
         payload.status_reason = status_reason;
       }
 
-      if (parent_id && Number(parent_id) > 0) {
-        const parentCustomer = await this.customersService.findOne({
-          where: { id: Number(parent_id) },
+      if (sale_id && Number(sale_id) > 0) {
+        const sale = await this.userService.findOne({
+          where: { id: Number(sale_id) },
         });
-        if (!parentCustomer) {
+        if (!sale) {
           return sendResponse(
             res,
             HttpStatusCodes.BAD_REQUEST,
             null,
-            `Parent customer with id ${parent_id} does not exist`,
+            `Sale with id ${sale_id} does not exist`,
           );
         }
-        payload.parent_id = Number(parent_id);
+        payload.sale_id = Number(sale_id);
       }
 
       const validate = await this.customersService.validateCustomer(payload);
@@ -260,10 +258,9 @@ export class CustomersController {
         start_date,
         end_date,
         phone,
-        parent_id,
+        sale_id,
         status_reason,
       } = data;
-
 
       // Get username from JWT if available
       const updatedBy = req.user?.username || 'system';
@@ -287,21 +284,21 @@ export class CustomersController {
         payload.status_reason = status_reason;
       }
 
-      if (parent_id && Number(parent_id) > 0) {
-        const parentCustomer = await this.customersService.findOne({
-          where: { id: Number(parent_id) },
+      if (sale_id && Number(sale_id) > 0) {
+        const sale = await this.userService.findOne({
+          where: { id: Number(sale_id) },
         });
-        if (!parentCustomer) {
+        if (!sale) {
           return sendResponse(
             res,
             HttpStatusCodes.BAD_REQUEST,
             null,
-            `Parent customer with id ${parent_id} does not exist`,
+            `Sale with id ${sale_id} does not exist`,
           );
         }
-        payload.parent_id = Number(parent_id);
-      } else if (parent_id === null) {
-        payload.parent_id = null;
+        payload.sale_id = Number(sale_id);
+      } else if (sale_id === null) {
+        payload.sale_id = null;
       }
 
       const result = await this.customersService.update(id, payload);
@@ -351,4 +348,3 @@ export class CustomersController {
     }
   }
 }
-

@@ -38,7 +38,7 @@ export class CreateCustomerResponse {
   phone?: string;
 
   @ApiProperty()
-  parent_id?: number;
+  sale_id?: number;
 
   @ApiProperty()
   status_reason?: number;

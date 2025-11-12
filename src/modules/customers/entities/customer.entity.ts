@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-    IsBoolean,
-    IsEmail,
-    IsNumber,
-    IsOptional,
-    IsString,
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -69,10 +69,10 @@ export class CustomerEntity extends BaseEntity {
   @Column({ type: 'bigint', nullable: true })
   end_date: number;
 
-  @ApiProperty({ description: 'Parent customer id', required: false })
+  @ApiProperty({ description: 'Sale id', required: false })
   @IsOptional()
   @Column({ type: 'int', nullable: true })
-  parent_id?: number;
+  sale_id?: number;
 
   @ApiProperty({ description: 'Phone number', required: false })
   @IsOptional()

@@ -36,10 +36,10 @@ export class CustomersService extends BaseService<CustomerEntity> {
 
 
   async getCustomerByParentId(
-    parentId: number,
+    saleId: number,
   ): Promise<[CustomerEntity[], number]> {
     const query = this.customersRepository.createQueryBuilder('customer');
-    query.where('customer.parent_id = :parentId', { parentId });
+    query.where('customer.sale_id = :saleId', { saleId });
     const [result, totalCount] = await query.getManyAndCount();
     return [result, totalCount];
   }

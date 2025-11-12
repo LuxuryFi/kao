@@ -60,10 +60,10 @@ export class CreateCustomerDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ description: 'Parent customer id', required: false })
+  @ApiProperty({ description: 'Sale id', required: false })
   @IsOptional()
   @IsNumber()
-  parent_id?: number;
+  sale_id?: number;
 
   @ApiProperty({ description: 'Status reason code', required: false })
   @IsOptional()
@@ -118,10 +118,10 @@ export class UpdateCustomerDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ description: 'Parent customer id', required: false })
+  @ApiProperty({ description: 'Sale id', required: false })
   @IsOptional()
   @IsNumber()
-  parent_id?: number;
+  sale_id?: number;
 
   @ApiProperty({ description: 'Status reason code', required: false })
   @IsOptional()

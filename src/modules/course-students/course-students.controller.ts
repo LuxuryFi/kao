@@ -1,21 +1,21 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import {
-    ApiOkResponse,
-    ApiOperation,
-    ApiQuery,
-    ApiTags,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
@@ -23,28 +23,30 @@ import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CourseStudentsService } from './course-students.service';
 import {
-    CreateCourseStudentDto,
-    DeleteCourseStudentDto,
-    UpdateCourseStudentDto,
+  CreateCourseStudentDto,
+  DeleteCourseStudentDto,
+  UpdateCourseStudentDto,
 } from './dto/course-student.dto';
 import {
-    CreateCourseStudentResponse,
-    GetCourseStudentResponse,
-    UpdateCourseStudentResponse,
+  CreateCourseStudentResponse,
+  GetCourseStudentResponse,
+  UpdateCourseStudentResponse,
 } from './response/course-student.response';
 
 @Controller('course-students')
 @ApiTags('Course Students')
 export class CourseStudentsController {
-  constructor(
-    private readonly courseStudentsService: CourseStudentsService,
-  ) {}
+  constructor(private readonly courseStudentsService: CourseStudentsService) {}
 
   @Post()
   @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Create Course Student' })
   @ApiOkResponse({ type: CreateCourseStudentResponse })
-  async create(@Body() data: CreateCourseStudentDto, @Res() res: Response, @Req() req: any) {
+  async create(
+    @Body() data: CreateCourseStudentDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const createdBy = req.user?.username || 'system';
@@ -54,6 +56,18 @@ export class CourseStudentsController {
         status: data.status !== undefined ? data.status : true,
         created_by: createdBy,
       } as any;
+      const duplicate = await this.courseStudentsService.isDuplicate(
+        data.student_id,
+        data.course_id,
+      );
+      if (duplicate) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.CONFLICT,
+          null,
+          'Student đã ở trong course này!',
+        );
+      }
       const result = await this.courseStudentsService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
@@ -217,11 +231,18 @@ export class CourseStudentsController {
   @UseGuards(AccessTokenGuard)
   @ApiOperation({ summary: 'Update Course Student' })
   @ApiOkResponse({ type: UpdateCourseStudentResponse })
-  async update(@Body() data: UpdateCourseStudentDto, @Res() res: Response, @Req() req: any) {
+  async update(
+    @Body() data: UpdateCourseStudentDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
     try {
       const { id, ...rest } = data as any;
       const updatedBy = req.user?.username || 'system';
-      await this.courseStudentsService.update(id, { ...rest, updated_by: updatedBy });
+      await this.courseStudentsService.update(id, {
+        ...rest,
+        updated_by: updatedBy,
+      });
       const updated = await this.courseStudentsService.findOne({
         where: { id },
       });
@@ -253,4 +274,3 @@ export class CourseStudentsController {
     }
   }
 }
-

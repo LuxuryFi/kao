@@ -16,6 +16,13 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     super(courseStudentsRepository);
   }
 
+  async isDuplicate(student_id: number, course_id: number): Promise<boolean> {
+    const exist = await this.courseStudentsRepository.findOne({
+      where: { student_id, course_id },
+    });
+    return !!exist;
+  }
+
   async findFilteredPaginated(params: {
     student_id?: number;
     course_id?: number;
@@ -100,4 +107,3 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     return result;
   }
 }
-

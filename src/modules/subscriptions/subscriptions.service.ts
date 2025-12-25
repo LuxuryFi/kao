@@ -1,0 +1,159 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PackageEntity } from '../packages/entities/package.entity';
+import { UserEntity } from '../users/entities/user.entity';
+import {
+  CreateSubscriptionDto,
+  SearchSubscriptionDto,
+  UpdateSubscriptionDto,
+} from './dto/subscription.dto';
+import { SubscriptionEntity } from './entities/subscription.entity';
+
+@Injectable()
+export class SubscriptionsService {
+  constructor(
+    @InjectRepository(SubscriptionEntity)
+    private readonly subscriptionRepo: Repository<SubscriptionEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(PackageEntity)
+    private readonly packageRepo: Repository<PackageEntity>,
+  ) {}
+
+  async create(data: CreateSubscriptionDto) {
+    const created_at = Math.floor(Date.now() / 1000);
+    const entity = this.subscriptionRepo.create({
+      ...data,
+      status: 1,
+      created_at,
+    });
+    return await this.subscriptionRepo.save(entity);
+  }
+
+  async update(data: UpdateSubscriptionDto) {
+    const updated_at = Math.floor(Date.now() / 1000);
+    const entity = await this.subscriptionRepo.findOne({
+      where: { subscription_id: data.subscription_id, deleted: 0 },
+    });
+    if (!entity) return null;
+    Object.assign(entity, data, { updated_at });
+    return await this.subscriptionRepo.save(entity);
+  }
+
+  async softDelete(id: number) {
+    const updated_at = Math.floor(Date.now() / 1000);
+    return this.subscriptionRepo.update(id, { deleted: 1, updated_at });
+  }
+
+  async getById(id: number) {
+    const entity = await this.subscriptionRepo.findOne({
+      where: { subscription_id: id, deleted: 0 },
+    });
+    if (!entity) return null;
+    const user = entity.user_id
+      ? await this.userRepo.findOne({ where: { id: entity.user_id } })
+      : null;
+    const pkg = entity.package_id
+      ? await this.packageRepo.findOne({
+          where: { package_id: entity.package_id },
+        })
+      : null;
+    return {
+      ...entity,
+      user_name: user?.name || '',
+      package_name: pkg?.package_name || '',
+    };
+  }
+
+  async getByUserId(user_id: number) {
+    const subs = await this.subscriptionRepo.find({
+      where: { user_id, deleted: 0 },
+    });
+    return Promise.all(
+      subs.map(async (s) => {
+        const pkg = s.package_id
+          ? await this.packageRepo.findOne({
+              where: { package_id: s.package_id },
+            })
+          : null;
+        return { ...s, user_name: '', package_name: pkg?.package_name || '' };
+      }),
+    );
+  }
+
+  async getByPackageId(package_id: number) {
+    const subs = await this.subscriptionRepo.find({
+      where: { package_id, deleted: 0 },
+    });
+    return Promise.all(
+      subs.map(async (s) => {
+        const user = s.user_id
+          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+          : null;
+        return { ...s, user_name: user?.name || '', package_name: '' };
+      }),
+    );
+  }
+
+  async getUserListBySubscription(subscription_id: number) {
+    const sub = await this.subscriptionRepo.findOne({
+      where: { subscription_id, deleted: 0 },
+    });
+    if (!sub) return [];
+    return this.userRepo.find({ where: { id: sub.user_id } });
+  }
+
+  async search(query: SearchSubscriptionDto) {
+    const qb = this.subscriptionRepo
+      .createQueryBuilder('subscription')
+      .where('subscription.deleted = 0');
+    if (query.user_id)
+      qb.andWhere('subscription.user_id = :user_id', {
+        user_id: query.user_id,
+      });
+    if (query.package_id)
+      qb.andWhere('subscription.package_id = :package_id', {
+        package_id: query.package_id,
+      });
+    const subs = await qb.getMany();
+    return Promise.all(
+      subs.map(async (s) => {
+        const user = s.user_id
+          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+          : null;
+        const pkg = s.package_id
+          ? await this.packageRepo.findOne({
+              where: { package_id: s.package_id },
+            })
+          : null;
+        return {
+          ...s,
+          user_name: user?.name || '',
+          package_name: pkg?.package_name || '',
+        };
+      }),
+    );
+  }
+
+  async list() {
+    const subs = await this.subscriptionRepo.find({ where: { deleted: 0 } });
+    return Promise.all(
+      subs.map(async (s) => {
+        const user = s.user_id
+          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+          : null;
+        const pkg = s.package_id
+          ? await this.packageRepo.findOne({
+              where: { package_id: s.package_id },
+            })
+          : null;
+        return {
+          ...s,
+          user_name: user?.name || '',
+          package_name: pkg?.package_name || '',
+        };
+      }),
+    );
+  }
+}

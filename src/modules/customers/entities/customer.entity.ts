@@ -97,4 +97,3 @@ export class CustomerEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 256, nullable: true })
   updated_by?: string;
 }
-

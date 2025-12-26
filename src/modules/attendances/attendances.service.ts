@@ -402,4 +402,107 @@ export class AttendancesService {
 
     return result;
   }
+
+  /**
+   * Lấy trạng thái của học sinh: đã có subscription và đã tham gia lớp nào
+   */
+  async getStudentStatus(studentId: number): Promise<{
+    student_id: number;
+    student_name: string;
+    has_subscription: boolean;
+    subscription?: {
+      subscription_id: number;
+      package_id: number;
+      package_name: string;
+      quantity: number;
+      start_date?: number;
+      status: number;
+    };
+    has_courses: boolean;
+    courses: Array<{
+      course_id: number;
+      course_name: string;
+      status: boolean;
+      schedule: string;
+      court_id: number;
+    }>;
+    can_create_attendance: boolean;
+    reason?: string;
+  }> {
+    // Lấy thông tin user
+    const user = await this.userRepo.findOne({
+      where: { id: studentId },
+    });
+
+    if (!user) {
+      throw new Error(`Student with id ${studentId} not found`);
+    }
+
+    // Lấy subscription
+    const subscription = await this.subscriptionRepo.findOne({
+      where: { user_id: studentId, status: 1, deleted: 0 },
+    });
+
+    let subscriptionInfo = null;
+    if (subscription) {
+      const pkg = await this.packageRepo.findOne({
+        where: { package_id: subscription.package_id },
+      });
+      subscriptionInfo = {
+        subscription_id: subscription.subscription_id,
+        package_id: subscription.package_id,
+        package_name: pkg?.package_name || '',
+        quantity: subscription.quantity,
+        start_date: subscription.start_date,
+        status: subscription.status,
+      };
+    }
+
+    // Lấy danh sách courses
+    const courseStudents = await this.courseStudentRepo.find({
+      where: { student_id: studentId, status: true },
+    });
+
+    const courses = [];
+    if (courseStudents.length > 0) {
+      const courseIds = courseStudents.map((cs) => cs.course_id);
+      const courseDetails = await this.courseRepo.find({
+        where: courseIds.map((id) => ({ id, status: true })),
+      });
+
+      for (const course of courseDetails) {
+        courses.push({
+          course_id: course.id,
+          course_name: course.course_name,
+          status: course.status,
+          schedule: course.schedule,
+          court_id: course.court_id,
+        });
+      }
+    }
+
+    // Kiểm tra có thể tạo attendance không
+    let can_create_attendance = false;
+    let reason = '';
+
+    if (!subscription || !subscription.start_date) {
+      reason = !subscription ? 'Chưa có subscription' : 'Subscription chưa có start_date';
+    } else if (courses.length === 0) {
+      reason = 'Chưa tham gia lớp nào';
+    } else {
+      can_create_attendance = true;
+      reason = 'Đủ điều kiện để tạo attendance';
+    }
+
+    return {
+      student_id: user.id,
+      student_name: user.name || user.username,
+      has_subscription: !!subscription,
+      subscription: subscriptionInfo,
+      has_courses: courses.length > 0,
+      courses,
+      can_create_attendance,
+      reason,
+    };
+  }
 }

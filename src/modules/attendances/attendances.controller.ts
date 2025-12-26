@@ -267,4 +267,67 @@ export class AttendancesController {
       );
     }
   }
+
+  @Get('student-status/:studentId')
+  @ApiOperation({
+    summary: 'Get Student Status',
+    description:
+      'Lấy trạng thái của học sinh: đã có subscription hay chưa, đã tham gia lớp nào, có thể tạo attendance không',
+  })
+  @ApiOkResponse({
+    description: 'Trạng thái của học sinh',
+    schema: {
+      type: 'object',
+      properties: {
+        student_id: { type: 'number' },
+        student_name: { type: 'string' },
+        has_subscription: { type: 'boolean' },
+        subscription: {
+          type: 'object',
+          properties: {
+            subscription_id: { type: 'number' },
+            package_id: { type: 'number' },
+            package_name: { type: 'string' },
+            quantity: { type: 'number' },
+            start_date: { type: 'number' },
+            status: { type: 'number' },
+          },
+        },
+        has_courses: { type: 'boolean' },
+        courses: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              course_id: { type: 'number' },
+              course_name: { type: 'string' },
+              status: { type: 'boolean' },
+              schedule: { type: 'string' },
+              court_id: { type: 'number' },
+            },
+          },
+        },
+        can_create_attendance: { type: 'boolean' },
+        reason: { type: 'string' },
+      },
+    },
+  })
+  async getStudentStatus(
+    @Param('studentId') studentId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.attendancesService.getStudentStatus(
+        Number(studentId),
+      );
+      return sendResponse(res, HttpStatusCodes.OK, result, null);
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
+    }
+  }
 }

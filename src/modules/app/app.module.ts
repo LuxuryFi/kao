@@ -7,6 +7,7 @@ import { AnyExceptionFilter } from 'src/filters/any-exception.filter';
 import { loggerConfig } from 'src/shared/logger.helper';
 import { getMetadataArgsStorage } from 'typeorm';
 import { AuthModule } from '../auth/auth.module';
+import { AttendancesModule } from '../attendances/attendances.module';
 import { ConfigModule } from '../config/config.module';
 import { CONFIG } from '../config/config.provider';
 import { CourseStudentsModule } from '../course-students/course-students.module';
@@ -49,6 +50,7 @@ import { AppService } from './app.service';
     CourseStudentsModule,
     PackagesModule,
     SubscriptionsModule,
+    AttendancesModule,
   ],
   controllers: [AppController],
   providers: [

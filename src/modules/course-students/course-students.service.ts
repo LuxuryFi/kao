@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IConfig } from 'config';
 import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
 import { CONFIG } from '../config/config.provider';
+import { AttendancesService } from '../attendances/attendances.service';
 import { CourseStudentEntity } from './entities/course-student.entity';
 
 @Injectable()
@@ -12,6 +13,8 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     @InjectRepository(CourseStudentEntity)
     private readonly courseStudentsRepository: Repository<CourseStudentEntity>,
     @Inject(CONFIG) private readonly configService: IConfig,
+    @Inject(forwardRef(() => AttendancesService))
+    private readonly attendancesService: AttendancesService,
   ) {
     super(courseStudentsRepository);
   }
@@ -103,6 +106,24 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
         'user.end_date as end_date',
       ])
       .getRawMany();
+
+    return result;
+  }
+
+  async store(data: any): Promise<CourseStudentEntity> {
+    const result = await this.courseStudentsRepository.save(data);
+
+    // Tự động tạo attendance nếu student đã có subscription
+    if (result && result.student_id && result.status !== false) {
+      try {
+        console.log(`[CourseStudentsService] Triggering auto-create attendances for student ${result.student_id}`);
+        const attendances = await this.attendancesService.autoCreateAttendances(result.student_id);
+        console.log(`[CourseStudentsService] Created ${attendances.length} attendances for student ${result.student_id}`);
+      } catch (error) {
+        console.error('[CourseStudentsService] Error auto-creating attendances:', error);
+        // Không throw error để không ảnh hưởng đến việc tạo course_student
+      }
+    }
 
     return result;
   }

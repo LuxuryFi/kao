@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PackageEntity } from '../packages/entities/package.entity';
 import { UserEntity } from '../users/entities/user.entity';
+import { AttendancesService } from '../attendances/attendances.service';
 import {
   CreateSubscriptionDto,
   SearchSubscriptionDto,
@@ -19,6 +20,8 @@ export class SubscriptionsService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(PackageEntity)
     private readonly packageRepo: Repository<PackageEntity>,
+    @Inject(forwardRef(() => AttendancesService))
+    private readonly attendancesService: AttendancesService,
   ) {}
 
   async create(data: CreateSubscriptionDto) {
@@ -28,7 +31,22 @@ export class SubscriptionsService {
       status: 1,
       created_at,
     });
-    return await this.subscriptionRepo.save(entity);
+    const result = await this.subscriptionRepo.save(entity);
+
+    // Tự động tạo attendance nếu student đã có course active
+    if (result && result.user_id) {
+      try {
+        console.log(`[SubscriptionsService] Triggering auto-create attendances for user ${result.user_id}`);
+        const attendances = await this.attendancesService.autoCreateAttendances(result.user_id);
+        console.log(`[SubscriptionsService] Created ${attendances.length} attendances for user ${result.user_id}`);
+      } catch (error) {
+        console.error('[SubscriptionsService] Error auto-creating attendances:', error);
+        console.error('[SubscriptionsService] Error stack:', error.stack);
+        // Không throw error để không ảnh hưởng đến việc tạo subscription
+      }
+    }
+
+    return result;
   }
 
   async update(data: UpdateSubscriptionDto) {

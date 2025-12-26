@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateSubscriptionDto {
   @ApiProperty()
@@ -13,6 +13,15 @@ export class CreateSubscriptionDto {
   @ApiProperty()
   @IsInt()
   quantity: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  start_date?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -37,6 +46,15 @@ export class UpdateSubscriptionDto {
   @ApiProperty({ required: false })
   @IsOptional()
   quantity?: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  start_date?: number;
 }
 
 export class SearchSubscriptionDto {

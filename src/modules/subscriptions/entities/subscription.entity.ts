@@ -34,6 +34,15 @@ export class SubscriptionEntity extends BaseEntity {
 
   @ApiProperty({
     type: 'bigint',
+    description: 'Start date as UNIX timestamp (seconds)',
+    required: false,
+  })
+  @IsOptional()
+  @Column({ type: 'bigint', nullable: true })
+  start_date?: number;
+
+  @ApiProperty({
+    type: 'bigint',
     description: 'Created timestamp as UNIX time (seconds)',
   })
   @Column({ type: 'bigint', nullable: true, default: () => 'UNIX_TIMESTAMP()' })

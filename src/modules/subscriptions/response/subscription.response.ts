@@ -25,6 +25,13 @@ export class SubscriptionResponse {
   @ApiProperty()
   quantity: number;
 
+  @ApiProperty({
+    type: 'bigint',
+    description: 'Start date as UNIX timestamp (seconds)',
+    required: false,
+  })
+  start_date?: number;
+
   @ApiProperty({ type: 'bigint' })
   created_at: number;
 
@@ -34,4 +41,3 @@ export class SubscriptionResponse {
   @ApiProperty({ description: 'Soft delete flag' })
   deleted?: number;
 }
-

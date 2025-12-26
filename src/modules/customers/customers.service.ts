@@ -43,7 +43,7 @@ export class CustomersService extends BaseService<CustomerEntity> {
     const [result, totalCount] = await query.getManyAndCount();
     return [result, totalCount];
   }
-  
+
   async getCustomerByRole(payload) {
     // Query the users with pagination and filtering by role
     const {
@@ -62,32 +62,31 @@ export class CustomersService extends BaseService<CustomerEntity> {
 
     // If keyword is provided, search across name, email, and phone
     if (keyword) {
-      query.andWhere('(user.name LIKE :keyword OR user.phone LIKE :keyword)', {
+      query.andWhere('(customer.name LIKE :keyword OR customer.phone LIKE :keyword)', {
         keyword: `%${keyword}%`,
       });
     } else {
       // Individual filters only apply when no keyword is provided
       if (username) {
-        query.andWhere('user.username LIKE :username', {
+        query.andWhere('customer.username LIKE :username', {
           username: `%${username}%`,
         });
       }
+      if (email) {
+        query.andWhere('customer.email LIKE :email', { email: `%${email}%` });
+      }
       if (name) {
-        query.andWhere('user.name LIKE :name', { name: `%${name}%` });
+        query.andWhere('customer.name LIKE :name', { name: `%${name}%` });
       }
       if (phone) {
-        query.andWhere('user.phone LIKE :phone', { phone: `%${phone}%` });
+        query.andWhere('customer.phone LIKE :phone', { phone: `%${phone}%` });
       }
     }
 
     if (status !== undefined) {
-      query.andWhere('user.status = :status', { status });
+      query.andWhere('customer.status = :status', { status });
     }
-    if (Array.isArray(role) && role.length > 0) {
-      query.andWhere('user.role IN (:...roles)', { roles: role });
-    } else if (typeof role === 'string' && role) {
-      query.andWhere('user.role LIKE :role', { role: `%${role}%` });
-    }
+    // Note: Customer entity does not have 'role' field, so role filter is not applied
 
     query.skip(skip).take(select);
 
@@ -96,4 +95,3 @@ export class CustomersService extends BaseService<CustomerEntity> {
     return [result, totalCount];
   }
 }
-

@@ -1,27 +1,27 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Options,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res,
-    UploadedFile,
-    UseGuards,
-    UseInterceptors,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Options,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-    ApiBody,
-    ApiConsumes,
-    ApiOkResponse,
-    ApiOperation,
-    ApiQuery,
-    ApiTags,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
@@ -32,9 +32,9 @@ import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { AdminUpdatePasswordDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto } from './dto/user.dto';
 import {
-    CreateUserResponse,
-    GetUserResponse,
-    UpdateUserResponse,
+  CreateUserResponse,
+  GetUserResponse,
+  UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';
@@ -172,6 +172,91 @@ export class UserController {
     });
     // Return the response with data and total count for pagination
     return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
+  }
+  @Put('update-password')
+  @UseGuards(AccessTokenGuard)
+  @ApiOperation({
+    summary: 'Update Password (Self)',
+    description: 'User tự update password của mình dựa trên token',
+  })
+  @ApiOkResponse({
+    description: 'Password updated successfully',
+  })
+  async updatePassword(
+    @Body() data: UpdatePasswordDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
+    try {
+      const userId = req.user?.sub || req.user?.id;
+      console.log(req.user);
+      if (!userId) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.UNAUTHORIZED,
+          null,
+          'User not authenticated',
+        );
+      }
+      console.log(userId, data.new_password);
+      await this.usersService.updatePassword(userId, data.new_password);
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { message: 'Password updated successfully' },
+        null,
+      );
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
+    }
+  }
+
+  @Put('admin/update-password')
+  @UseGuards(AccessTokenGuard)
+  @ApiOperation({
+    summary: 'Update Password (Admin)',
+    description: 'Admin update password cho user khác, cần user_id',
+  })
+  @ApiOkResponse({
+    description: 'Password updated successfully',
+  })
+  async adminUpdatePassword(
+    @Body() data: AdminUpdatePasswordDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
+    try {
+      // Kiểm tra quyền admin
+      const currentUserRole = req.user?.role;
+      if (currentUserRole !== 'admin') {
+        return sendResponse(
+          res,
+          HttpStatusCodes.FORBIDDEN,
+          null,
+          'Only admin can update password for other users',
+        );
+      }
+
+      await this.usersService.updatePassword(data.user_id, data.new_password);
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { message: 'Password updated successfully' },
+        null,
+      );
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
+    }
   }
 
   @Get('by-parent/:parentId')
@@ -328,6 +413,7 @@ export class UserController {
     @Req() req: any,
   ) {
     try {
+      console.log(data);
       const {
         address,
         gender,
@@ -450,88 +536,4 @@ export class UserController {
     }
   }
 
-  @Put('update-password')
-  @UseGuards(AccessTokenGuard)
-  @ApiOperation({
-    summary: 'Update Password (Self)',
-    description: 'User tự update password của mình dựa trên token',
-  })
-  @ApiOkResponse({
-    description: 'Password updated successfully',
-  })
-  async updatePassword(
-    @Body() data: UpdatePasswordDto,
-    @Res() res: Response,
-    @Req() req: any,
-  ) {
-    try {
-      const userId = req.user?.sub || req.user?.id;
-      if (!userId) {
-        return sendResponse(
-          res,
-          HttpStatusCodes.UNAUTHORIZED,
-          null,
-          'User not authenticated',
-        );
-      }
-
-      await this.usersService.updatePassword(userId, data.new_password);
-      return sendResponse(
-        res,
-        HttpStatusCodes.OK,
-        { message: 'Password updated successfully' },
-        null,
-      );
-    } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
-      );
-    }
-  }
-
-  @Put('admin/update-password')
-  @UseGuards(AccessTokenGuard)
-  @ApiOperation({
-    summary: 'Update Password (Admin)',
-    description: 'Admin update password cho user khác, cần user_id',
-  })
-  @ApiOkResponse({
-    description: 'Password updated successfully',
-  })
-  async adminUpdatePassword(
-    @Body() data: AdminUpdatePasswordDto,
-    @Res() res: Response,
-    @Req() req: any,
-  ) {
-    try {
-      // Kiểm tra quyền admin
-      const currentUserRole = req.user?.role;
-      if (currentUserRole !== 'admin') {
-        return sendResponse(
-          res,
-          HttpStatusCodes.FORBIDDEN,
-          null,
-          'Only admin can update password for other users',
-        );
-      }
-
-      await this.usersService.updatePassword(data.user_id, data.new_password);
-      return sendResponse(
-        res,
-        HttpStatusCodes.OK,
-        { message: 'Password updated successfully' },
-        null,
-      );
-    } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
-      );
-    }
-  }
 }

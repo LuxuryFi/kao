@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { IConfig } from 'config';
 import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { CONFIG } from '../config/config.provider';
 import { UserEntity } from './entities/user.entity';
 
@@ -99,6 +99,7 @@ export class UsersService extends BaseService<UserEntity> {
   }
 
   async updatePassword(userId: number, newPassword: string): Promise<UserEntity> {
+    console.log(userId, newPassword);
     const user = await this.usersRepository.findOne({
       where: { id: userId },
     });

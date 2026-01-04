@@ -78,6 +78,22 @@ export class CreateUserDto {
   status_reason?: number;
 }
 
+export class UpdatePasswordDto {
+  @ApiProperty({ description: 'New password' })
+  @IsString()
+  new_password: string;
+}
+
+export class AdminUpdatePasswordDto {
+  @ApiProperty({ description: 'User ID to update password' })
+  @IsNumber()
+  user_id: number;
+
+  @ApiProperty({ description: 'New password' })
+  @IsString()
+  new_password: string;
+}
+
 export class UpdateUserDto {
   @ApiProperty()
   @IsString()

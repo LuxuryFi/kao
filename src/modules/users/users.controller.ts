@@ -30,7 +30,7 @@ import { Errors } from 'src/constants/errors';
 import { ALLOWED_ROLES } from 'src/constants/roles';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { AdminUpdatePasswordDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto } from './dto/user.dto';
 import {
     CreateUserResponse,
     GetUserResponse,
@@ -429,6 +429,91 @@ export class UserController {
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
       console.log('Error', err);
+    }
+  }
+
+  @Put('update-password')
+  @UseGuards(AccessTokenGuard)
+  @ApiOperation({
+    summary: 'Update Password (Self)',
+    description: 'User tự update password của mình dựa trên token',
+  })
+  @ApiOkResponse({
+    description: 'Password updated successfully',
+  })
+  async updatePassword(
+    @Body() data: UpdatePasswordDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
+    try {
+      const userId = req.user?.sub || req.user?.id;
+      if (!userId) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.UNAUTHORIZED,
+          null,
+          'User not authenticated',
+        );
+      }
+
+      await this.usersService.updatePassword(userId, data.new_password);
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { message: 'Password updated successfully' },
+        null,
+      );
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
+    }
+  }
+
+  @Put('admin/update-password')
+  @UseGuards(AccessTokenGuard)
+  @ApiOperation({
+    summary: 'Update Password (Admin)',
+    description: 'Admin update password cho user khác, cần user_id',
+  })
+  @ApiOkResponse({
+    description: 'Password updated successfully',
+  })
+  async adminUpdatePassword(
+    @Body() data: AdminUpdatePasswordDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
+    try {
+      // Kiểm tra quyền admin
+      const currentUserRole = req.user?.role;
+      if (currentUserRole !== 'admin') {
+        return sendResponse(
+          res,
+          HttpStatusCodes.FORBIDDEN,
+          null,
+          'Only admin can update password for other users',
+        );
+      }
+
+      await this.usersService.updatePassword(data.user_id, data.new_password);
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { message: 'Password updated successfully' },
+        null,
+      );
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 }

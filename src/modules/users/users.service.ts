@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IConfig } from 'config';
 import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { CONFIG } from '../config/config.provider';
 import { UserEntity } from './entities/user.entity';
 
@@ -95,5 +96,20 @@ export class UsersService extends BaseService<UserEntity> {
     query.where('user.parent_id = :parentId', { parentId });
     const [result, totalCount] = await query.getManyAndCount();
     return [result, totalCount];
+  }
+
+  async updatePassword(userId: number, newPassword: string): Promise<UserEntity> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    user.password = hashedPassword;
+
+    return await this.usersRepository.save(user);
   }
 }

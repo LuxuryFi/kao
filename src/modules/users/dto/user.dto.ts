@@ -95,50 +95,58 @@ export class AdminUpdatePasswordDto {
 }
 
 export class UpdateUserDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsEmail()
-  email: string;
-
-  @ApiProperty()
-  @IsString()
-  name: string;
+  email?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  url: string;
+  name?: string;
 
-  @ApiProperty()
-  @IsBoolean()
-  status: boolean;
-
-  @ApiProperty()
-  @IsBoolean()
-  gender: boolean;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
-  start_date: number;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-  })
-  @IsOptional()
-  @IsNumber()
-  end_date: number;
-
-  @ApiProperty()
   @IsString()
-  role: string;
+  url?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  gender?: boolean;
+
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  start_date?: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  end_date?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  role?: string;
 
   @ApiProperty({ description: 'Phone number', required: false })
   @IsOptional()

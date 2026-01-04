@@ -354,19 +354,37 @@ export class UserController {
       const updatedBy = req.user?.username || 'system';
 
       const payload: any = {
-        address,
-        email,
-        gender,
-        name,
-        url,
-        status,
-        start_date,
-        end_date,
-        role,
         updated_by: updatedBy,
       };
 
-      // Only add optional fields if they have values
+      // Only add fields if they are provided
+      if (address !== undefined) {
+        payload.address = address;
+      }
+      if (email !== undefined) {
+        payload.email = email;
+      }
+      if (gender !== undefined) {
+        payload.gender = gender;
+      }
+      if (name !== undefined) {
+        payload.name = name;
+      }
+      if (url !== undefined) {
+        payload.url = url;
+      }
+      if (status !== undefined) {
+        payload.status = status;
+      }
+      if (start_date !== undefined) {
+        payload.start_date = start_date;
+      }
+      if (end_date !== undefined) {
+        payload.end_date = end_date;
+      }
+      if (role !== undefined) {
+        payload.role = role;
+      }
       if (phone !== undefined) {
         payload.phone = phone;
       }

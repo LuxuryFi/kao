@@ -1,20 +1,20 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  Res,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Res,
+    UseGuards,
 } from '@nestjs/common';
 import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
@@ -22,9 +22,9 @@ import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { AttendancesService } from './attendances.service';
 import {
-  CreateAttendanceDto,
-  SearchAttendanceDto,
-  UpdateAttendanceDto,
+    CreateAttendanceDto,
+    SearchAttendanceDto,
+    UpdateAttendanceDto,
 } from './dto/attendance.dto';
 import { AttendanceResponse } from './response/attendance.response';
 

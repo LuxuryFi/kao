@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ATTENDANCE_STATUS } from 'src/constants/attendance';
 
 export class CreateAttendanceDto {
@@ -29,6 +29,15 @@ export class CreateAttendanceDto {
   @IsOptional()
   @IsEnum(ATTENDANCE_STATUS)
   status?: string;
+
+  @ApiProperty({
+    description: 'Is trial attendance (true if manually created as trial, false if auto-created)',
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_trial?: boolean;
 }
 
 export class UpdateAttendanceDto {
@@ -44,6 +53,14 @@ export class UpdateAttendanceDto {
   @IsOptional()
   @IsEnum(ATTENDANCE_STATUS)
   status?: string;
+
+  @ApiProperty({
+    description: 'Is trial attendance',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_trial?: boolean;
 }
 
 export class SearchAttendanceDto {

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('attendance')
@@ -51,4 +51,13 @@ export class AttendanceEntity extends BaseEntity {
   @IsOptional()
   @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
   updated_date?: Date;
+
+  @ApiProperty({
+    description: 'Is trial attendance (true if manually created as trial, false if auto-created)',
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  @Column({ type: 'boolean', default: false, nullable: false })
+  is_trial: boolean;
 }

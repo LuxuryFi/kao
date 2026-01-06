@@ -24,4 +24,7 @@ export class AttendanceResponse {
 
   @ApiProperty()
   updated_date?: Date;
+
+  @ApiProperty()
+  is_trial: boolean;
 }

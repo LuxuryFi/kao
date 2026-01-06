@@ -181,6 +181,7 @@ export class AttendancesService {
             date: dateStr,
             time: item.hour,
             status: ATTENDANCE_STATUS.NOT_CHECKED_IN,
+            is_trial: false, // Auto-created attendances are not trial
           });
           attendances.push(attendance);
           sessionCount++;
@@ -208,6 +209,7 @@ export class AttendancesService {
     const entity = this.attendanceRepo.create({
       ...data,
       status: data.status || ATTENDANCE_STATUS.NOT_CHECKED_IN,
+      is_trial: data.is_trial !== undefined ? data.is_trial : false,
     });
     return await this.attendanceRepo.save(entity);
   }

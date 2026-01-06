@@ -1,28 +1,28 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Options,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res,
-    UploadedFile,
-    UseGuards,
-    UseInterceptors,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Options,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
     ApiBearerAuth,
-    ApiBody,
-    ApiConsumes,
-    ApiOkResponse,
-    ApiOperation,
-    ApiQuery,
-    ApiTags,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
@@ -33,9 +33,9 @@ import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { AdminUpdatePasswordDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto } from './dto/user.dto';
 import {
-    CreateUserResponse,
-    GetUserResponse,
-    UpdateUserResponse,
+  CreateUserResponse,
+  GetUserResponse,
+  UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';

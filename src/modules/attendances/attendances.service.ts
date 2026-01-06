@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ATTENDANCE_STATUS } from 'src/constants/attendance';
+import { CONTACT_STATUS } from 'src/constants/contact-status';
+import { TRIAL_STATUS } from 'src/constants/trial-status';
 import { Repository } from 'typeorm';
 import { CourseStudentEntity } from '../course-students/entities/course-student.entity';
 import { CourseEntity } from '../courses/entities/course.entity';
 import { PackageEntity } from '../packages/entities/package.entity';
 import { StudentEntity } from '../students/entities/student.entity';
 import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
+import { UserEntity } from '../users/entities/user.entity';
 import {
   CreateAttendanceDto,
   SearchAttendanceDto,
@@ -40,6 +43,8 @@ export class AttendancesService {
     private readonly packageRepo: Repository<PackageEntity>,
     @InjectRepository(StudentEntity)
     private readonly studentRepo: Repository<StudentEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
   ) {}
 
   /**
@@ -213,12 +218,13 @@ export class AttendancesService {
     });
     const saved = await this.attendanceRepo.save(entity);
 
-    // If this is a trial attendance, update student trial_status to "đã đăng ký học thử"
+    // Nếu là buổi học thử, cập nhật trial_status của student và contact_status của parent
     if (saved.is_trial && saved.student_id) {
       await this.studentRepo.update(
         { id: saved.student_id },
-        { trial_status: 'đã đăng ký học thử' },
+        { trial_status: TRIAL_STATUS.TRIAL_REGISTERED },
       );
+      await this.updateParentContactStatus(saved.student_id);
     }
 
     return saved;
@@ -234,7 +240,8 @@ export class AttendancesService {
     Object.assign(entity, data);
     const saved = await this.attendanceRepo.save(entity);
 
-    // If this is a trial attendance and status changed to CHECKED_IN, update student trial_status
+    // Nếu là buổi học thử và status chuyển sang CHECKED_IN,
+    // cập nhật trial_status của student và contact_status của parent
     if (
       saved.is_trial &&
       saved.student_id &&
@@ -243,11 +250,77 @@ export class AttendancesService {
     ) {
       await this.studentRepo.update(
         { id: saved.student_id },
-        { trial_status: 'đã đến học thử' },
+        { trial_status: TRIAL_STATUS.TRIAL_ATTENDED },
       );
+      await this.updateParentContactStatus(saved.student_id);
     }
 
     return saved;
+  }
+
+  /**
+   * Cập nhật contact_status cho parent (role customer) dựa trên trial_status của tất cả student con
+   */
+  private async updateParentContactStatus(studentId: number): Promise<void> {
+    const student = await this.studentRepo.findOne({
+      where: { id: studentId },
+    });
+
+    if (!student || !student.parent_id) {
+      return;
+    }
+
+    // Chỉ áp dụng cho parent có role = customer
+    const parent = await this.userRepo.findOne({
+      where: { id: student.parent_id },
+    });
+
+    if (!parent || parent.role !== 'customer') {
+      return;
+    }
+
+    const children = await this.studentRepo.find({
+      where: { parent_id: parent.id },
+    });
+
+    if (!children || children.length === 0) {
+      await this.userRepo.update(
+        { id: parent.id },
+        { contact_status: CONTACT_STATUS.NOT_CONTACTED },
+      );
+      return;
+    }
+
+    const total = children.length;
+    const trialRegisteredCount = children.filter(
+      (s) =>
+        s.trial_status === TRIAL_STATUS.TRIAL_REGISTERED ||
+        s.trial_status === TRIAL_STATUS.TRIAL_ATTENDED,
+    ).length;
+    const trialAttendedCount = children.filter(
+      (s) => s.trial_status === TRIAL_STATUS.TRIAL_ATTENDED,
+    ).length;
+
+    let newStatus: string;
+
+    if (trialAttendedCount > 0) {
+      newStatus =
+        trialAttendedCount === total
+          ? CONTACT_STATUS.TRIAL_ATTENDED_ALL
+          : CONTACT_STATUS.TRIAL_ATTENDED_PARTIAL;
+    } else if (trialRegisteredCount > 0) {
+      newStatus =
+        trialRegisteredCount === total
+          ? CONTACT_STATUS.TRIAL_REGISTERED_ALL
+          : CONTACT_STATUS.TRIAL_REGISTERED_PARTIAL;
+    } else {
+      newStatus = CONTACT_STATUS.NOT_CONTACTED;
+    }
+
+    await this.userRepo.update(
+      { id: parent.id },
+      { contact_status: newStatus },
+    );
   }
 
   async findOne(id: number): Promise<AttendanceEntity | null> {

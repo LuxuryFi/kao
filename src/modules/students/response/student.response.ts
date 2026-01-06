@@ -28,7 +28,7 @@ class BaseStudentResponse {
   status: string;
 
   @IsString()
-  @ApiProperty({ description: 'Trial status', required: false })
+  @ApiProperty({ description: 'Trial status', required: false, enum: ['TRIAL_REGISTERED', 'TRIAL_ATTENDED'] })
   @IsOptional()
   trial_status?: string;
 

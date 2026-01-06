@@ -96,7 +96,7 @@ export class SearchStudentDto {
   status?: string;
 
   @ApiProperty({
-    description: 'Trial status: đã đăng ký học thử, đã đến học thử',
+    description: 'Trial status: TRIAL_REGISTERED, TRIAL_ATTENDED',
     required: false,
   })
   @IsOptional()

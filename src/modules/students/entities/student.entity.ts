@@ -41,8 +41,8 @@ export class StudentEntity extends BaseEntity {
   status: string;
 
   @ApiProperty({
-    description: 'Trial status: đã đăng ký học thử, đã đến học thử, or null',
-    enum: ['đã đăng ký học thử', 'đã đến học thử'],
+    description: 'Trial status: TRIAL_REGISTERED, TRIAL_ATTENDED, or null',
+    enum: ['TRIAL_REGISTERED', 'TRIAL_ATTENDED'],
     required: false,
   })
   @IsString()

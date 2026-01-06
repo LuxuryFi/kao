@@ -5,6 +5,7 @@ import { CourseEntity } from '../courses/entities/course.entity';
 import { PackageEntity } from '../packages/entities/package.entity';
 import { StudentEntity } from '../students/entities/student.entity';
 import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
+import { UserEntity } from '../users/entities/user.entity';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
 import { AttendanceEntity } from './entities/attendance.entity';
@@ -18,6 +19,7 @@ import { AttendanceEntity } from './entities/attendance.entity';
       SubscriptionEntity,
       PackageEntity,
       StudentEntity,
+      UserEntity,
     ]),
   ],
   controllers: [AttendancesController],

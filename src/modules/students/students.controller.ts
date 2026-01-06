@@ -52,8 +52,13 @@ export class StudentsController {
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const createdBy = req.user?.username || 'system';
+      
+      // Determine status based on parent role
+      const status = await this.studentsService.determineStudentStatus(data.parent_id);
+      
       const payload = {
         ...data,
+        status,
         created_at: currentTimestamp,
         created_by: createdBy,
       } as any;
@@ -85,6 +90,16 @@ export class StudentsController {
     name: 'phone',
     required: false,
     description: 'Filter by phone',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by status (trial, active, inactive)',
+  })
+  @ApiQuery({
+    name: 'trial_status',
+    required: false,
+    description: 'Filter by trial status (đã đăng ký học thử, đã đến học thử)',
   })
   async findAll(
     @Res() res: Response,

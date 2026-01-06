@@ -211,7 +211,17 @@ export class AttendancesService {
       status: data.status || ATTENDANCE_STATUS.NOT_CHECKED_IN,
       is_trial: data.is_trial !== undefined ? data.is_trial : false,
     });
-    return await this.attendanceRepo.save(entity);
+    const saved = await this.attendanceRepo.save(entity);
+
+    // If this is a trial attendance, update student trial_status to "đã đăng ký học thử"
+    if (saved.is_trial && saved.student_id) {
+      await this.studentRepo.update(
+        { id: saved.student_id },
+        { trial_status: 'đã đăng ký học thử' },
+      );
+    }
+
+    return saved;
   }
 
   async update(data: UpdateAttendanceDto): Promise<AttendanceEntity | null> {
@@ -219,8 +229,25 @@ export class AttendancesService {
       where: { id: data.id },
     });
     if (!entity) return null;
+    
+    const oldStatus = entity.status;
     Object.assign(entity, data);
-    return await this.attendanceRepo.save(entity);
+    const saved = await this.attendanceRepo.save(entity);
+
+    // If this is a trial attendance and status changed to CHECKED_IN, update student trial_status
+    if (
+      saved.is_trial &&
+      saved.student_id &&
+      oldStatus !== ATTENDANCE_STATUS.CHECKED_IN &&
+      saved.status === ATTENDANCE_STATUS.CHECKED_IN
+    ) {
+      await this.studentRepo.update(
+        { id: saved.student_id },
+        { trial_status: 'đã đến học thử' },
+      );
+    }
+
+    return saved;
   }
 
   async findOne(id: number): Promise<AttendanceEntity | null> {
@@ -248,6 +275,12 @@ export class AttendancesService {
 
     if (query.status) {
       qb.andWhere('attendance.status = :status', { status: query.status });
+    }
+
+    if (query.is_trial !== undefined) {
+      qb.andWhere('attendance.is_trial = :is_trial', {
+        is_trial: query.is_trial,
+      });
     }
 
     qb.orderBy('attendance.date', 'ASC').addOrderBy('attendance.time', 'ASC');

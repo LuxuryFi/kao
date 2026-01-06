@@ -85,4 +85,12 @@ export class SearchAttendanceDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Filter by is_trial (true/false or "true"/"false")',
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  is_trial?: boolean;
 }

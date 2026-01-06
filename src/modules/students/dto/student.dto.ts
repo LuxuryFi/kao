@@ -21,6 +21,11 @@ export class CreateStudentDto {
   @Type(() => Number)
   @IsNumber()
   parent_id: number;
+
+  @ApiProperty({ description: 'Description', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 export class UpdateStudentDto {
@@ -50,6 +55,19 @@ export class UpdateStudentDto {
   @Type(() => Number)
   @IsNumber()
   parent_id?: number;
+
+  @ApiProperty({ description: 'Description', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'Student status: trial, active, inactive',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
 
 export class SearchStudentDto {
@@ -68,5 +86,21 @@ export class SearchStudentDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiProperty({
+    description: 'Student status: trial, active, inactive',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiProperty({
+    description: 'Trial status: đã đăng ký học thử, đã đến học thử',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  trial_status?: string;
 }
 

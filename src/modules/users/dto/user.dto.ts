@@ -82,6 +82,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsNumber()
   status_reason?: number;
+
+  @ApiProperty({ description: 'Contact status', required: false })
+  @IsOptional()
+  @IsString()
+  contact_status?: string;
 }
 
 export class UpdatePasswordDto {
@@ -168,4 +173,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   status_reason?: number;
+
+  @ApiProperty({ description: 'Contact status', required: false })
+  @IsOptional()
+  @IsString()
+  contact_status?: string;
 }

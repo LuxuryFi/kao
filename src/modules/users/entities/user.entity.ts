@@ -104,6 +104,12 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   phone?: string;
 
+  @ApiProperty({ description: 'Contact status', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  contact_status?: string;
+
   @ApiProperty({ type: Date, description: 'Last update date' })
   @IsOptional()
   @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })

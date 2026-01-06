@@ -133,6 +133,11 @@ export class UserController {
     isArray: true,
     type: String,
   })
+  @ApiQuery({
+    name: 'contact_status',
+    required: false,
+    description: 'Filter by contact status',
+  })
   @ApiOperation({
     summary: 'Get Public Users',
   })
@@ -147,6 +152,7 @@ export class UserController {
       phone,
       keyword,
       status,
+      contact_status,
     } = PaginationDto;
 
     // normalize role to array if provided as comma-separated string or repeated keys
@@ -170,6 +176,7 @@ export class UserController {
       phone,
       keyword,
       status,
+      contact_status,
     });
     // Return the response with data and total count for pagination
     return sendResponse(res, HttpStatusCodes.OK, { result, totalCount }, null);
@@ -322,6 +329,7 @@ export class UserController {
         phone,
         parent_id,
         status_reason,
+        contact_status,
       } = data;
 
       if (role && !ALLOWED_ROLES.includes(role)) {
@@ -393,6 +401,9 @@ export class UserController {
       if (phone) payload.phone = phone;
       if (status_reason !== undefined && status_reason !== null) {
         payload.status_reason = status_reason;
+      }
+      if (contact_status !== undefined) {
+        payload.contact_status = contact_status;
       }
 
       // Only add parent_id if it's a valid positive number
@@ -467,6 +478,7 @@ export class UserController {
         phone,
         parent_id,
         status_reason,
+        contact_status,
       } = data;
       if (role && !ALLOWED_ROLES.includes(role)) {
         return sendResponse(

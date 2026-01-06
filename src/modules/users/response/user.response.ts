@@ -37,6 +37,11 @@ class BaseUserResponse {
   @IsString()
   @ApiProperty({ description: 'Profile picture or public URL' })
   url: string;
+
+  @IsString()
+  @ApiProperty({ description: 'Contact status', required: false })
+  @IsOptional()
+  contact_status?: string;
 }
 
 export class CreateUserResponse extends BaseUserResponse {}

@@ -180,6 +180,12 @@ export class AttendancesController {
   @ApiQuery({ name: 'course_id', required: false })
   @ApiQuery({ name: 'date', required: false })
   @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({
+    name: 'is_trial',
+    required: false,
+    description: 'Filter by is_trial (true/false)',
+    type: Boolean,
+  })
   @ApiOperation({ summary: 'Search/List Attendances' })
   async search(@Query() q: SearchAttendanceDto, @Res() res: Response) {
     try {

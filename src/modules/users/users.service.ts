@@ -47,6 +47,7 @@ export class UsersService extends BaseService<UserEntity> {
       keyword,
       status,
       role,
+      contact_status,
     } = payload;
 
     const query = this.usersRepository.createQueryBuilder('user');
@@ -82,6 +83,11 @@ export class UsersService extends BaseService<UserEntity> {
       query.andWhere('user.role IN (:...roles)', { roles: role });
     } else if (typeof role === 'string' && role) {
       query.andWhere('user.role LIKE :role', { role: `%${role}%` });
+    }
+    if (contact_status) {
+      query.andWhere('user.contact_status LIKE :contact_status', {
+        contact_status: `%${contact_status}%`,
+      });
     }
 
     query.skip(skip).take(select);

@@ -30,6 +30,32 @@ export class StudentEntity extends BaseEntity {
   @Column({ type: 'int', nullable: false })
   parent_id: number;
 
+  @ApiProperty({
+    description: 'Student status: trial, active, inactive',
+    enum: ['trial', 'active', 'inactive'],
+    default: 'active',
+  })
+  @IsString()
+  @IsOptional()
+  @Column({ type: 'varchar', length: 20, default: 'active', nullable: false })
+  status: string;
+
+  @ApiProperty({
+    description: 'Trial status: đã đăng ký học thử, đã đến học thử, or null',
+    enum: ['đã đăng ký học thử', 'đã đến học thử'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  trial_status?: string;
+
+  @ApiProperty({ description: 'Description', required: false })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'text', nullable: true })
+  description?: string;
+
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true, default: () => 'UNIX_TIMESTAMP()' })

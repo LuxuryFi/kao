@@ -4,6 +4,7 @@ import { IConfig } from 'config';
 import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
 import { CONFIG } from '../config/config.provider';
+import { UserEntity } from '../users/entities/user.entity';
 import { StudentEntity } from './entities/student.entity';
 import { SearchStudentDto } from './dto/student.dto';
 
@@ -12,9 +13,33 @@ export class StudentsService extends BaseService<StudentEntity> {
   constructor(
     @InjectRepository(StudentEntity)
     private readonly studentsRepository: Repository<StudentEntity>,
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
     @Inject(CONFIG) private readonly configService: IConfig,
   ) {
     super(studentsRepository);
+  }
+
+  /**
+   * Determine student status based on parent role
+   * If parent role is 'customer', student status is 'trial', otherwise 'active'
+   */
+  async determineStudentStatus(parentId: number): Promise<string> {
+    const parent = await this.usersRepository.findOne({
+      where: { id: parentId },
+    });
+
+    if (!parent) {
+      throw new NotFoundException(`Parent with id ${parentId} not found`);
+    }
+
+    // If parent role is 'customer', student status is 'trial'
+    if (parent.role === 'customer') {
+      return 'trial';
+    }
+
+    // Otherwise, default to 'active'
+    return 'active';
   }
 
   async getStudentsByParentId(parentId: number): Promise<[StudentEntity[], number]> {
@@ -37,6 +62,16 @@ export class StudentsService extends BaseService<StudentEntity> {
 
     if (query.phone) {
       qb.andWhere('student.phone LIKE :phone', { phone: `%${query.phone}%` });
+    }
+
+    if (query.status) {
+      qb.andWhere('student.status = :status', { status: query.status });
+    }
+
+    if (query.trial_status) {
+      qb.andWhere('student.trial_status = :trial_status', {
+        trial_status: query.trial_status,
+      });
     }
 
     return await qb.getManyAndCount();

@@ -23,6 +23,20 @@ class BaseStudentResponse {
   @ApiProperty({ description: 'Parent user ID' })
   parent_id: number;
 
+  @IsString()
+  @ApiProperty({ description: 'Student status: trial, active, inactive' })
+  status: string;
+
+  @IsString()
+  @ApiProperty({ description: 'Trial status', required: false })
+  @IsOptional()
+  trial_status?: string;
+
+  @IsString()
+  @ApiProperty({ description: 'Description', required: false })
+  @IsOptional()
+  description?: string;
+
   @IsNumber()
   @ApiProperty({ description: 'Created timestamp' })
   @IsOptional()

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCourseStudentDto {
-  @ApiProperty({ description: 'Student ID (User ID)' })
+  @ApiProperty({ description: 'Student ID (references student.id)' })
   @IsNumber()
   student_id: number;
 
@@ -21,7 +21,7 @@ export class UpdateCourseStudentDto {
   @IsNumber()
   id: number;
 
-  @ApiProperty({ description: 'Student ID (User ID)', required: false })
+  @ApiProperty({ description: 'Student ID (references student.id)', required: false })
   @IsNumber()
   @IsOptional()
   student_id?: number;

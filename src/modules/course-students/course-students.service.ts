@@ -5,6 +5,7 @@ import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
 import { CONFIG } from '../config/config.provider';
 import { AttendancesService } from '../attendances/attendances.service';
+import { StudentEntity } from '../students/entities/student.entity';
 import { CourseStudentEntity } from './entities/course-student.entity';
 
 @Injectable()
@@ -12,6 +13,8 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
   constructor(
     @InjectRepository(CourseStudentEntity)
     private readonly courseStudentsRepository: Repository<CourseStudentEntity>,
+    @InjectRepository(StudentEntity)
+    private readonly studentRepository: Repository<StudentEntity>,
     @Inject(CONFIG) private readonly configService: IConfig,
     @Inject(forwardRef(() => AttendancesService))
     private readonly attendancesService: AttendancesService,
@@ -80,10 +83,10 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
   }
 
   async findByCourseId(courseId: number): Promise<any[]> {
-    // Get students with user details for a course
+    // Get students with student details for a course
     const result = await this.courseStudentsRepository
       .createQueryBuilder('course_student')
-      .leftJoinAndSelect('public_user', 'user', 'user.id = course_student.student_id')
+      .leftJoinAndSelect('student', 'student', 'student.id = course_student.student_id')
       .where('course_student.course_id = :courseId', { courseId })
       .select([
         'course_student.id as id',
@@ -92,18 +95,12 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
         'course_student.status as status',
         'course_student.created_at as created_at',
         'course_student.updated_date as updated_date',
-        'user.id as user_id',
-        'user.username as username',
-        'user.name as name',
-        'user.email as email',
-        'user.phone as phone',
-        'user.address as address',
-        'user.gender as gender',
-        'user.url as url',
-        'user.role as role',
-        'user.status as user_status',
-        'user.start_date as start_date',
-        'user.end_date as end_date',
+        'student.id as student_id_detail',
+        'student.name as name',
+        'student.age as age',
+        'student.phone as phone',
+        'student.parent_id as parent_id',
+        'student.created_at as student_created_at',
       ])
       .getRawMany();
 

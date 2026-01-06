@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -142,6 +143,7 @@ export class CustomersController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create Customer',
   })
@@ -235,6 +237,7 @@ export class CustomersController {
 
   @Put(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update Customer',
   })

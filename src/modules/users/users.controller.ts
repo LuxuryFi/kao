@@ -1,27 +1,28 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Options,
-  Param,
-  Post,
-  Put,
-  Query,
-  Req,
-  Res,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Options,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Res,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOkResponse,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
 } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
@@ -32,9 +33,9 @@ import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { AdminUpdatePasswordDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto } from './dto/user.dto';
 import {
-  CreateUserResponse,
-  GetUserResponse,
-  UpdateUserResponse,
+    CreateUserResponse,
+    GetUserResponse,
+    UpdateUserResponse,
 } from './response/user.response';
 
 import { diskStorage } from 'multer';
@@ -175,6 +176,7 @@ export class UserController {
   }
   @Put('update-password')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update Password (Self)',
     description: 'User tự update password của mình dựa trên token',
@@ -218,6 +220,7 @@ export class UserController {
 
   @Put('admin/update-password')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update Password (Admin)',
     description: 'Admin update password cho user khác, cần user_id',
@@ -261,7 +264,8 @@ export class UserController {
 
   @Get('by-parent/:parentId')
   @ApiOperation({
-    summary: 'Get Users by Parent ID',
+    summary: 'Get Users by Parent ID (Deprecated - Use /students/by-parent/:parentId instead)',
+    description: 'This endpoint is deprecated. Please use /students/by-parent/:parentId to get students by parent.',
   })
   async findByParent(
     @Param('parentId') parentId: number,
@@ -295,6 +299,7 @@ export class UserController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create Public User',
   })
@@ -400,6 +405,7 @@ export class UserController {
 
   @Put(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update Public User',
   })

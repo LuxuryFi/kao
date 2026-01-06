@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
@@ -14,6 +14,7 @@ export class CourtsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Court' })
   async create(@Body() data: CreateCourtDto, @Res() res: Response, @Req() req: any) {
     try {
@@ -82,6 +83,7 @@ export class CourtsController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Court' })
   async update(@Body() data: UpdateCourtDto, @Res() res: Response, @Req() req: any) {
     try {

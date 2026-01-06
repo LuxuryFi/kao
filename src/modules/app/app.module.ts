@@ -16,6 +16,7 @@ import { CourtsModule } from '../courts/courts.module';
 import { CustomersModule } from '../customers/customers.module';
 import { PackagesModule } from '../packages/packages.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { StudentsModule } from '../students/students.module';
 import { UserModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -44,6 +45,7 @@ import { AppService } from './app.service';
     }),
     AuthModule,
     UserModule,
+    StudentsModule,
     CustomersModule,
     CourtsModule,
     CoursesModule,

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
@@ -14,6 +14,7 @@ export class PackagesController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Package' })
   async create(@Body() data: CreatePackageDto, @Res() res: Response, @Req() req: any) {
     try {
@@ -68,6 +69,7 @@ export class PackagesController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Package' })
   async update(@Body() data: UpdatePackageDto, @Res() res: Response, @Req() req: any) {
     try {

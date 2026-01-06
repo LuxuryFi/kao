@@ -2,7 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PackageEntity } from '../packages/entities/package.entity';
-import { UserEntity } from '../users/entities/user.entity';
+import { StudentEntity } from '../students/entities/student.entity';
 import { AttendancesService } from '../attendances/attendances.service';
 import {
   CreateSubscriptionDto,
@@ -16,8 +16,8 @@ export class SubscriptionsService {
   constructor(
     @InjectRepository(SubscriptionEntity)
     private readonly subscriptionRepo: Repository<SubscriptionEntity>,
-    @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(StudentEntity)
+    private readonly studentRepo: Repository<StudentEntity>,
     @InjectRepository(PackageEntity)
     private readonly packageRepo: Repository<PackageEntity>,
     @Inject(forwardRef(() => AttendancesService))
@@ -34,11 +34,11 @@ export class SubscriptionsService {
     const result = await this.subscriptionRepo.save(entity);
 
     // Tự động tạo attendance nếu student đã có course active
-    if (result && result.user_id) {
+    if (result && result.student_id) {
       try {
-        console.log(`[SubscriptionsService] Triggering auto-create attendances for user ${result.user_id}`);
-        const attendances = await this.attendancesService.autoCreateAttendances(result.user_id);
-        console.log(`[SubscriptionsService] Created ${attendances.length} attendances for user ${result.user_id}`);
+        console.log(`[SubscriptionsService] Triggering auto-create attendances for student ${result.student_id}`);
+        const attendances = await this.attendancesService.autoCreateAttendances(result.student_id);
+        console.log(`[SubscriptionsService] Created ${attendances.length} attendances for student ${result.student_id}`);
       } catch (error) {
         console.error('[SubscriptionsService] Error auto-creating attendances:', error);
         console.error('[SubscriptionsService] Error stack:', error.stack);
@@ -69,8 +69,8 @@ export class SubscriptionsService {
       where: { subscription_id: id, deleted: 0 },
     });
     if (!entity) return null;
-    const user = entity.user_id
-      ? await this.userRepo.findOne({ where: { id: entity.user_id } })
+    const student = entity.student_id
+      ? await this.studentRepo.findOne({ where: { id: entity.student_id } })
       : null;
     const pkg = entity.package_id
       ? await this.packageRepo.findOne({
@@ -79,14 +79,14 @@ export class SubscriptionsService {
       : null;
     return {
       ...entity,
-      user_name: user?.name || '',
+      student_name: student?.name || '',
       package_name: pkg?.package_name || '',
     };
   }
 
-  async getByUserId(user_id: number) {
+  async getByStudentId(student_id: number) {
     const subs = await this.subscriptionRepo.find({
-      where: { user_id, deleted: 0 },
+      where: { student_id, deleted: 0 },
     });
     return Promise.all(
       subs.map(async (s) => {
@@ -95,7 +95,7 @@ export class SubscriptionsService {
               where: { package_id: s.package_id },
             })
           : null;
-        return { ...s, user_name: '', package_name: pkg?.package_name || '' };
+        return { ...s, student_name: '', package_name: pkg?.package_name || '' };
       }),
     );
   }
@@ -106,29 +106,29 @@ export class SubscriptionsService {
     });
     return Promise.all(
       subs.map(async (s) => {
-        const user = s.user_id
-          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+        const student = s.student_id
+          ? await this.studentRepo.findOne({ where: { id: s.student_id } })
           : null;
-        return { ...s, user_name: user?.name || '', package_name: '' };
+        return { ...s, student_name: student?.name || '', package_name: '' };
       }),
     );
   }
 
-  async getUserListBySubscription(subscription_id: number) {
+  async getStudentListBySubscription(subscription_id: number) {
     const sub = await this.subscriptionRepo.findOne({
       where: { subscription_id, deleted: 0 },
     });
     if (!sub) return [];
-    return this.userRepo.find({ where: { id: sub.user_id } });
+    return this.studentRepo.find({ where: { id: sub.student_id } });
   }
 
   async search(query: SearchSubscriptionDto) {
     const qb = this.subscriptionRepo
       .createQueryBuilder('subscription')
       .where('subscription.deleted = 0');
-    if (query.user_id)
-      qb.andWhere('subscription.user_id = :user_id', {
-        user_id: query.user_id,
+    if (query.student_id)
+      qb.andWhere('subscription.student_id = :student_id', {
+        student_id: query.student_id,
       });
     if (query.package_id)
       qb.andWhere('subscription.package_id = :package_id', {
@@ -137,8 +137,8 @@ export class SubscriptionsService {
     const subs = await qb.getMany();
     return Promise.all(
       subs.map(async (s) => {
-        const user = s.user_id
-          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+        const student = s.student_id
+          ? await this.studentRepo.findOne({ where: { id: s.student_id } })
           : null;
         const pkg = s.package_id
           ? await this.packageRepo.findOne({
@@ -147,7 +147,7 @@ export class SubscriptionsService {
           : null;
         return {
           ...s,
-          user_name: user?.name || '',
+          student_name: student?.name || '',
           package_name: pkg?.package_name || '',
         };
       }),
@@ -158,8 +158,8 @@ export class SubscriptionsService {
     const subs = await this.subscriptionRepo.find({ where: { deleted: 0 } });
     return Promise.all(
       subs.map(async (s) => {
-        const user = s.user_id
-          ? await this.userRepo.findOne({ where: { id: s.user_id } })
+        const student = s.student_id
+          ? await this.studentRepo.findOne({ where: { id: s.student_id } })
           : null;
         const pkg = s.package_id
           ? await this.packageRepo.findOne({
@@ -168,7 +168,7 @@ export class SubscriptionsService {
           : null;
         return {
           ...s,
-          user_name: user?.name || '',
+          student_name: student?.name || '',
           package_name: pkg?.package_name || '',
         };
       }),

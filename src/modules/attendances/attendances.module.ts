@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AttendanceEntity } from './entities/attendance.entity';
-import { CourseEntity } from '../courses/entities/course.entity';
 import { CourseStudentEntity } from '../course-students/entities/course-student.entity';
-import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
+import { CourseEntity } from '../courses/entities/course.entity';
 import { PackageEntity } from '../packages/entities/package.entity';
-import { UserEntity } from '../users/entities/user.entity';
+import { StudentEntity } from '../students/entities/student.entity';
+import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
+import { AttendanceEntity } from './entities/attendance.entity';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { AttendancesService } from './attendances.service';
       CourseStudentEntity,
       SubscriptionEntity,
       PackageEntity,
-      UserEntity,
+      StudentEntity,
     ]),
   ],
   controllers: [AttendancesController],

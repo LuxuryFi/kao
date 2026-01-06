@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateSubscriptionDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Student ID (references student.id)' })
   @IsInt()
-  user_id: number;
+  student_id: number;
 
   @ApiProperty()
   @IsInt()
@@ -58,10 +58,10 @@ export class UpdateSubscriptionDto {
 }
 
 export class SearchSubscriptionDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'Student ID (references student.id)' })
   @IsOptional()
   @IsInt()
-  user_id?: number;
+  student_id?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()

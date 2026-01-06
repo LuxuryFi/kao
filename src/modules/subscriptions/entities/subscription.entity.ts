@@ -10,9 +10,9 @@ export class SubscriptionEntity extends BaseEntity {
   subscription_id: number;
 
   @IsNumber()
-  @ApiProperty()
+  @ApiProperty({ description: 'Student ID (references student.id)' })
   @Column({ type: 'int', nullable: false })
-  user_id: number;
+  student_id: number;
 
   @IsNumber()
   @ApiProperty()

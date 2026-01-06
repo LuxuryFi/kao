@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ATTENDANCE_STATUS } from 'src/constants/attendance';
-import { AttendanceEntity } from './entities/attendance.entity';
-import { CourseEntity } from '../courses/entities/course.entity';
+import { Repository } from 'typeorm';
 import { CourseStudentEntity } from '../course-students/entities/course-student.entity';
-import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
+import { CourseEntity } from '../courses/entities/course.entity';
 import { PackageEntity } from '../packages/entities/package.entity';
-import { UserEntity } from '../users/entities/user.entity';
+import { StudentEntity } from '../students/entities/student.entity';
+import { SubscriptionEntity } from '../subscriptions/entities/subscription.entity';
 import {
   CreateAttendanceDto,
   SearchAttendanceDto,
   UpdateAttendanceDto,
 } from './dto/attendance.dto';
+import { AttendanceEntity } from './entities/attendance.entity';
 
 interface ScheduleItem {
   day: number;
@@ -38,8 +38,8 @@ export class AttendancesService {
     private readonly subscriptionRepo: Repository<SubscriptionEntity>,
     @InjectRepository(PackageEntity)
     private readonly packageRepo: Repository<PackageEntity>,
-    @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(StudentEntity)
+    private readonly studentRepo: Repository<StudentEntity>,
   ) {}
 
   /**
@@ -62,7 +62,7 @@ export class AttendancesService {
 
     // 2. Lấy subscription active của student
     const subscription = await this.subscriptionRepo.findOne({
-      where: { user_id: studentId, status: 1, deleted: 0 },
+      where: { student_id: studentId, status: 1, deleted: 0 },
     });
 
     console.log(`[AttendancesService] Subscription found:`, subscription ? `id=${subscription.subscription_id}, start_date=${subscription.start_date}` : 'none');
@@ -294,18 +294,14 @@ export class AttendancesService {
   }> {
     console.log(`[AttendancesService] Starting createAttendancesForAllUsers, role filter: ${role || 'all'}`);
 
-    // 1. Lấy tất cả users (có thể filter theo role)
-    const query = this.userRepo.createQueryBuilder('user');
-    if (role) {
-      query.andWhere('user.role = :role', { role });
-    }
-    query.andWhere('user.status = :status', { status: true });
-    const users = await query.getMany();
+    // 1. Lấy tất cả students
+    const query = this.studentRepo.createQueryBuilder('student');
+    const students = await query.getMany();
 
-    console.log(`[AttendancesService] Found ${users.length} users to process`);
+    console.log(`[AttendancesService] Found ${students.length} students to process`);
 
     const result = {
-      totalUsers: users.length,
+      totalUsers: students.length,
       processedUsers: 0,
       createdAttendances: 0,
       skippedUsers: 0,
@@ -321,11 +317,11 @@ export class AttendancesService {
       }>,
     };
 
-    // 2. Xử lý từng user
-    for (const user of users) {
+    // 2. Xử lý từng student
+    for (const student of students) {
       const detail: typeof result.details[0] = {
-        userId: user.id,
-        userName: user.name || user.username,
+        userId: student.id,
+        userName: student.name,
         hasActiveCourses: false,
         hasSubscription: false,
         hasStartDate: false,
@@ -334,14 +330,14 @@ export class AttendancesService {
       };
 
       try {
-        // Kiểm tra xem user đã có attendance chưa
+        // Kiểm tra xem student đã có attendance chưa
         const existingAttendances = await this.attendanceRepo.find({
-          where: { student_id: user.id },
+          where: { student_id: student.id },
           take: 1,
         });
 
         if (existingAttendances.length > 0) {
-          console.log(`[AttendancesService] User ${user.id} already has ${existingAttendances.length} attendances, skipping`);
+          console.log(`[AttendancesService] Student ${student.id} already has ${existingAttendances.length} attendances, skipping`);
           detail.status = 'skipped';
           detail.error = 'Already has attendances';
           result.skippedUsers++;
@@ -351,12 +347,12 @@ export class AttendancesService {
 
         // Kiểm tra course active
         const activeCourses = await this.courseStudentRepo.find({
-          where: { student_id: user.id, status: true },
+          where: { student_id: student.id, status: true },
         });
         detail.hasActiveCourses = activeCourses.length > 0;
 
         if (!detail.hasActiveCourses) {
-          console.log(`[AttendancesService] User ${user.id} has no active courses, skipping`);
+          console.log(`[AttendancesService] Student ${student.id} has no active courses, skipping`);
           detail.status = 'skipped';
           detail.error = 'No active courses';
           result.skippedUsers++;
@@ -366,13 +362,13 @@ export class AttendancesService {
 
         // Kiểm tra subscription
         const subscription = await this.subscriptionRepo.findOne({
-          where: { user_id: user.id, status: 1, deleted: 0 },
+          where: { student_id: student.id, status: 1, deleted: 0 },
         });
         detail.hasSubscription = !!subscription;
         detail.hasStartDate = !!(subscription && subscription.start_date);
 
         if (!subscription || !subscription.start_date) {
-          console.log(`[AttendancesService] User ${user.id} has no subscription or start_date, skipping`);
+          console.log(`[AttendancesService] Student ${student.id} has no subscription or start_date, skipping`);
           detail.status = 'skipped';
           detail.error = !subscription ? 'No subscription' : 'No start_date';
           result.skippedUsers++;
@@ -381,15 +377,15 @@ export class AttendancesService {
         }
 
         // Tạo attendance
-        const attendances = await this.autoCreateAttendances(user.id);
+        const attendances = await this.autoCreateAttendances(student.id);
         detail.attendancesCreated = attendances.length;
         detail.status = 'created';
         result.createdAttendances += attendances.length;
         result.processedUsers++;
 
-        console.log(`[AttendancesService] Created ${attendances.length} attendances for user ${user.id}`);
+        console.log(`[AttendancesService] Created ${attendances.length} attendances for student ${student.id}`);
       } catch (error) {
-        console.error(`[AttendancesService] Error processing user ${user.id}:`, error);
+        console.error(`[AttendancesService] Error processing student ${student.id}:`, error);
         detail.status = 'error';
         detail.error = error.message || 'Unknown error';
         result.skippedUsers++;
@@ -429,18 +425,18 @@ export class AttendancesService {
     can_create_attendance: boolean;
     reason?: string;
   }> {
-    // Lấy thông tin user
-    const user = await this.userRepo.findOne({
+    // Lấy thông tin student
+    const student = await this.studentRepo.findOne({
       where: { id: studentId },
     });
 
-    if (!user) {
+    if (!student) {
       throw new Error(`Student with id ${studentId} not found`);
     }
 
     // Lấy subscription
     const subscription = await this.subscriptionRepo.findOne({
-      where: { user_id: studentId, status: 1, deleted: 0 },
+      where: { student_id: studentId, status: 1, deleted: 0 },
     });
 
     let subscriptionInfo = null;
@@ -495,8 +491,8 @@ export class AttendancesService {
     }
 
     return {
-      student_id: user.id,
-      student_name: user.name || user.username,
+      student_id: student.id,
+      student_name: student.name,
       has_subscription: !!subscription,
       subscription: subscriptionInfo,
       has_courses: courses.length > 0,

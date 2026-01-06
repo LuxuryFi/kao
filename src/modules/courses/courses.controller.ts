@@ -11,7 +11,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
@@ -30,6 +30,7 @@ export class CoursesController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Course' })
   async create(@Body() data: CreateCourseDto, @Res() res: Response, @Req() req: any) {
     try {
@@ -140,6 +141,7 @@ export class CoursesController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Course' })
   async update(@Body() data: UpdateCourseDto, @Res() res: Response, @Req() req: any) {
     try {

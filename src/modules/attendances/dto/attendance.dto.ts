@@ -4,7 +4,7 @@ import { IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ATTENDANCE_STATUS } from 'src/constants/attendance';
 
 export class CreateAttendanceDto {
-  @ApiProperty({ description: 'Student ID (User ID)' })
+  @ApiProperty({ description: 'Student ID (references student.id)' })
   @IsInt()
   student_id: number;
 

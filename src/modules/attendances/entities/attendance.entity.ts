@@ -10,7 +10,7 @@ export class AttendanceEntity extends BaseEntity {
   id: number;
 
   @IsNumber()
-  @ApiProperty({ description: 'Student ID (User ID)' })
+  @ApiProperty({ description: 'Student ID (references student.id)' })
   @Column({ type: 'int', nullable: false })
   student_id: number;
 

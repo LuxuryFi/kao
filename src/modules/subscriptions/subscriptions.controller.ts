@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -31,6 +32,7 @@ export class SubscriptionsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Subscription' })
   @ApiOkResponse({ type: SubscriptionResponse })
   async create(@Body() dto: CreateSubscriptionDto) {
@@ -39,6 +41,7 @@ export class SubscriptionsController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Subscription' })
   @ApiOkResponse({ type: SubscriptionResponse })
   async update(@Body() dto: UpdateSubscriptionDto) {
@@ -47,15 +50,16 @@ export class SubscriptionsController {
 
   @Delete(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Soft Delete Subscription' })
   async delete(@Param('id') id: number) {
     return await this.subscriptionService.softDelete(id);
   }
 
-  @Get('by-user/:user_id')
-  @ApiOperation({ summary: 'Get Subscriptions by User ID' })
-  async getByUser(@Param('user_id') user_id: number) {
-    return await this.subscriptionService.getByUserId(user_id);
+  @Get('by-student/:student_id')
+  @ApiOperation({ summary: 'Get Subscriptions by Student ID' })
+  async getByStudent(@Param('student_id') student_id: number) {
+    return await this.subscriptionService.getByStudentId(student_id);
   }
 
   @Get('by-package/:package_id')
@@ -64,10 +68,10 @@ export class SubscriptionsController {
     return await this.subscriptionService.getByPackageId(package_id);
   }
 
-  @Get('user-list/:subscription_id')
-  @ApiOperation({ summary: 'Get user list by subscription' })
-  async getUserListBySub(@Param('subscription_id') subscription_id: number) {
-    return await this.subscriptionService.getUserListBySubscription(
+  @Get('student-list/:subscription_id')
+  @ApiOperation({ summary: 'Get student list by subscription' })
+  async getStudentListBySub(@Param('subscription_id') subscription_id: number) {
+    return await this.subscriptionService.getStudentListBySubscription(
       subscription_id,
     );
   }
@@ -80,11 +84,11 @@ export class SubscriptionsController {
   }
 
   @Get()
-  @ApiQuery({ name: 'user_id', required: false })
+  @ApiQuery({ name: 'student_id', required: false })
   @ApiQuery({ name: 'package_id', required: false })
   @ApiOperation({ summary: 'Search/List Subscriptions' })
   async search(@Query() q: SearchSubscriptionDto) {
-    if (q.user_id || q.package_id) {
+    if (q.student_id || q.package_id) {
       return await this.subscriptionService.search(q);
     }
     return await this.subscriptionService.list();

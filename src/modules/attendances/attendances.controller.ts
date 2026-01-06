@@ -11,6 +11,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import {
+    ApiBearerAuth,
     ApiOkResponse,
     ApiOperation,
     ApiQuery,
@@ -35,6 +36,7 @@ export class AttendancesController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Attendance' })
   @ApiOkResponse({ type: AttendanceResponse })
   async create(@Body() dto: CreateAttendanceDto, @Res() res: Response) {
@@ -53,6 +55,7 @@ export class AttendancesController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Attendance' })
   @ApiOkResponse({ type: AttendanceResponse })
   async update(@Body() dto: UpdateAttendanceDto, @Res() res: Response) {
@@ -79,6 +82,7 @@ export class AttendancesController {
 
   @Delete(':id')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete Attendance' })
   async delete(@Param('id') id: number, @Res() res: Response) {
     try {
@@ -198,6 +202,7 @@ export class AttendancesController {
 
   @Post('create-for-all-users')
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create Attendances for All Users',
     description:

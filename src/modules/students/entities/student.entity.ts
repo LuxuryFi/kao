@@ -1,41 +1,44 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('course_student')
-export class CourseStudentEntity extends BaseEntity {
+@Entity('student')
+export class StudentEntity extends BaseEntity {
   @PrimaryGeneratedColumn()
   @IsNumber()
   @ApiProperty()
   id: number;
 
-  @IsNumber()
-  @ApiProperty({ description: 'Student ID (references student.id)' })
-  @Column({ type: 'int' })
-  student_id: number;
+  @IsString()
+  @ApiProperty({ description: 'Student name' })
+  @Column({ type: 'varchar', length: 256 })
+  name: string;
 
   @IsNumber()
-  @ApiProperty({ description: 'Course ID' })
+  @ApiProperty({ description: 'Student age' })
   @Column({ type: 'int' })
-  course_id: number;
+  age: number;
 
-  @ApiProperty({
-    description: 'Status: true=active, false=inactive',
-    default: true,
-  })
-  @IsBoolean()
-  @Column({ type: 'boolean', default: true })
-  status: boolean;
-
-  @ApiProperty({ type: Date, description: 'Last update date' })
+  @IsString()
+  @ApiProperty({ description: 'Phone number', required: false })
   @IsOptional()
-  @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
-  updated_date?: Date;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  phone?: string;
+
+  @IsNumber()
+  @ApiProperty({ description: 'Parent user ID (references public_user.id)' })
+  @Column({ type: 'int', nullable: false })
+  parent_id: number;
 
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true, default: () => 'UNIX_TIMESTAMP()' })
   created_at?: number;
+
+  @ApiProperty({ type: Date, description: 'Last update date' })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
+  updated_date?: Date;
 
   @ApiProperty({ description: 'Created by username', required: false })
   @IsOptional()

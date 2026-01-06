@@ -35,10 +35,10 @@ export class AuthController {
     description: 'Add old refreshToken in <b>Authorization</b>',
   })
   @UseGuards(RefreshTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOkResponse({
     type: LoginResponse,
   })
-  @ApiBearerAuth()
   refresh(@Req() req: any): Promise<LoginResponse> {
     const userId = req.user['sub'];
     const refreshToken = req.user['refreshToken'];

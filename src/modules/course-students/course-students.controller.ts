@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -40,6 +41,7 @@ export class CourseStudentsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Course Student' })
   @ApiOkResponse({ type: CreateCourseStudentResponse })
   async create(
@@ -229,6 +231,7 @@ export class CourseStudentsController {
 
   @Put()
   @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Course Student' })
   @ApiOkResponse({ type: UpdateCourseStudentResponse })
   async update(

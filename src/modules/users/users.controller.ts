@@ -333,30 +333,64 @@ export class UserController {
         );
       }
 
-      const currentTimestamp = Math.floor(Date.now() / 1000); // Or use ms if you're storing milliseconds
+      // Special validation for customer role: only name and phone are required
+      if (role === 'customer') {
+        if (!name || !phone) {
+          return sendResponse(
+            res,
+            HttpStatusCodes.BAD_REQUEST,
+            null,
+            'For customer role, name and phone are required',
+          );
+        }
+      } else {
+        // For other roles, username and password are required
+        if (!username || !password) {
+          return sendResponse(
+            res,
+            HttpStatusCodes.BAD_REQUEST,
+            null,
+            'Username and password are required for non-customer roles',
+          );
+        }
+      }
+
+      const currentTimestamp = Math.floor(Date.now() / 1000);
       const createdBy = req.user?.username || 'system';
 
-      const hashedPassword = bcrypt.hashSync(password, 10);
       const payload: any = {
-        password: hashedPassword,
-        username,
-        start_date,
-        end_date,
-        gender,
-        role,
-        address,
-        email,
         name,
+        role,
         created_at: currentTimestamp,
-        url,
         status: 1,
         created_by: createdBy,
       };
 
-      // Only add optional fields if they have valid values
-      if (phone) {
-        payload.phone = phone;
+      // For customer role, set default values for optional fields
+      if (role === 'customer') {
+        // Generate username from phone if not provided
+        payload.username = username || `customer_${phone.replace(/\D/g, '')}`;
+        // Generate a random password for customer (they won't login)
+        payload.password = password || bcrypt.hashSync(`customer_${Date.now()}`, 10);
+        payload.address = address || '';
+        payload.email = email || '';
+        payload.url = url || '';
+        payload.gender = gender !== undefined ? gender : null;
+      } else {
+        // For other roles, username and password are required
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        payload.password = hashedPassword;
+        payload.username = username;
+        if (address) payload.address = address;
+        if (email) payload.email = email;
+        if (url) payload.url = url;
+        if (gender !== undefined) payload.gender = gender;
       }
+
+      // Optional fields for all roles
+      if (start_date) payload.start_date = start_date;
+      if (end_date) payload.end_date = end_date;
+      if (phone) payload.phone = phone;
       if (status_reason !== undefined && status_reason !== null) {
         payload.status_reason = status_reason;
       }
@@ -391,9 +425,9 @@ export class UserController {
       }
 
       const result = await this.usersService.store(payload);
-      return sendResponse(res, HttpStatusCodes.CREATED, result, null); // Use 201 Created for successful user creation
+      return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
-      console.error('Error:', err); // Use console.error for logging errors
+      console.error('Error:', err);
       return sendResponse(
         res,
         HttpStatusCodes.INTERNAL_SERVER_ERROR,

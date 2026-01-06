@@ -8,64 +8,70 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty()
-  @IsString()
-  username: string;
-
-  @ApiProperty()
-  @IsString()
-  password: string;
-
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ required: false, description: 'Username (required for all roles except customer)' })
   @IsOptional()
-  address: string;
+  @IsString()
+  username?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, description: 'Password (required for all roles except customer)' })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Name (required for customer role, optional for others)' })
   @IsString()
   name: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  url: string;
+  url?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, default: true })
+  @IsOptional()
   @IsBoolean()
-  status: boolean;
+  status?: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsBoolean()
-  gender: boolean;
+  gender?: boolean;
 
   @ApiProperty({
     type: Number,
     description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
   })
   @IsNumber()
   @IsOptional()
-  start_date: number;
+  start_date?: number;
 
   @ApiProperty({
     type: Number,
     description: 'UNIX timestamp (in seconds or ms)',
+    required: false,
   })
   @IsNumber()
   @IsOptional()
-  end_date: number;
+  end_date?: number;
 
   @ApiProperty()
   @IsString()
   role: string;
 
-  @ApiProperty({ description: 'Phone number', required: false })
-  @IsOptional()
+  @ApiProperty({ description: 'Phone number (required for customer role)' })
   @IsString()
-  phone?: string;
+  phone: string;
 
   @ApiProperty({ description: 'Parent user id', required: false })
   @IsOptional()

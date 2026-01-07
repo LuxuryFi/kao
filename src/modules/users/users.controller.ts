@@ -323,8 +323,6 @@ export class UserController {
         name,
         gender,
         url,
-        start_date,
-        end_date,
         role,
         phone,
         parent_id,
@@ -396,8 +394,6 @@ export class UserController {
       }
 
       // Optional fields for all roles
-      if (start_date) payload.start_date = start_date;
-      if (end_date) payload.end_date = end_date;
       if (phone) payload.phone = phone;
       if (status_reason !== undefined && status_reason !== null) {
         payload.status_reason = status_reason;
@@ -511,12 +507,6 @@ export class UserController {
       }
       if (status !== undefined) {
         payload.status = status;
-      }
-      if (start_date !== undefined) {
-        payload.start_date = start_date;
-      }
-      if (end_date !== undefined) {
-        payload.end_date = end_date;
       }
       if (role !== undefined) {
         payload.role = role;

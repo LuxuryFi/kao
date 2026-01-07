@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-    ApiBearerAuth,
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiOkResponse,
@@ -473,8 +473,6 @@ export class UserController {
         url,
         status,
         role,
-        start_date,
-        end_date,
         phone,
         parent_id,
         status_reason,

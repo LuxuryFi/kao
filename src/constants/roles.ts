@@ -1,1 +1,8 @@
-export const ALLOWED_ROLES = ['admin', 'manager','trainer', 'parent', 'student', 'customer'];
+export const ALLOWED_ROLES = [
+  'admin',
+  'manager',
+  'trainer',
+  'parent',
+  'student',
+  'customer',
+];

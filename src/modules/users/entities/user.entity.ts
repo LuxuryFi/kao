@@ -83,16 +83,6 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'bigint', nullable: true, default: () => 'UNIX_TIMESTAMP()' })
   created_at: number;
 
-  @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
-  @IsOptional()
-  @Column({ type: 'bigint', nullable: true })
-  start_date: number;
-
-  @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
-  @IsOptional()
-  @Column({ type: 'bigint', nullable: true })
-  end_date: number;
-
   @ApiProperty({ description: 'Parent user id', required: false })
   @IsOptional()
   @Column({ type: 'int', nullable: true })

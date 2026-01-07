@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-    IsBoolean,
-    IsEmail,
-    IsNumber,
-    IsOptional,
-    IsString,
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -46,24 +46,6 @@ export class CreateUserDto {
   @IsOptional()
   @IsBoolean()
   gender?: boolean;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  start_date?: number;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  end_date?: number;
 
   @ApiProperty()
   @IsString()
@@ -135,24 +117,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   gender?: boolean;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  start_date?: number;
-
-  @ApiProperty({
-    type: Number,
-    description: 'UNIX timestamp (in seconds or ms)',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  end_date?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()

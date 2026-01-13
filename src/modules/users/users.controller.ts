@@ -517,6 +517,9 @@ export class UserController {
       if (status_reason !== undefined && status_reason !== null) {
         payload.status_reason = status_reason;
       }
+      if (contact_status !== undefined) {
+        payload.contact_status = contact_status;
+      }
 
       // Only add parent_id if it's a valid positive number
       if (parent_id && Number(parent_id) > 0) {

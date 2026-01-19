@@ -81,7 +81,11 @@ export class SearchAttendanceDto {
   @IsString()
   date?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    required: false,
+    description:
+      'Attendance status. One of: ' + Object.values(ATTENDANCE_STATUS).join(', '),
+  })
   @IsOptional()
   @IsString()
   status?: string;

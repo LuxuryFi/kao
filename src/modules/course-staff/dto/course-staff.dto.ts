@@ -11,7 +11,12 @@ export class CreateCourseStaffDto {
   @IsNumber()
   user_id: number;
 
-  @ApiProperty({ description: 'Role', enum: COURSE_STAFF_ROLE })
+  @ApiProperty({
+    description:
+      'Role of staff in course. One of: ' +
+      Object.values(COURSE_STAFF_ROLE).join(', '),
+    enum: COURSE_STAFF_ROLE,
+  })
   @IsEnum(COURSE_STAFF_ROLE as any)
   role: string;
 }

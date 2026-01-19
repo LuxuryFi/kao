@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { CONTACT_STATUS } from 'src/constants/contact-status';
+import { ALLOWED_ROLES } from 'src/constants/roles';
 
 export class CreateUserDto {
   @ApiProperty({ required: false, description: 'Username (required for all roles except customer)' })
@@ -47,7 +49,9 @@ export class CreateUserDto {
   @IsBoolean()
   gender?: boolean;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: `Role of user. Allowed values: ${ALLOWED_ROLES.join(', ')}`,
+  })
   @IsString()
   role: string;
 
@@ -65,7 +69,12 @@ export class CreateUserDto {
   @IsNumber()
   status_reason?: number;
 
-  @ApiProperty({ description: 'Contact status', required: false })
+  @ApiProperty({
+    description:
+      'Contact status. One of: ' + Object.values(CONTACT_STATUS).join(', '),
+    required: false,
+    enum: Object.values(CONTACT_STATUS),
+  })
   @IsOptional()
   @IsString()
   contact_status?: string;
@@ -138,7 +147,12 @@ export class UpdateUserDto {
   @IsNumber()
   status_reason?: number;
 
-  @ApiProperty({ description: 'Contact status', required: false })
+  @ApiProperty({
+    description:
+      'Contact status. One of: ' + Object.values(CONTACT_STATUS).join(', '),
+    required: false,
+    enum: Object.values(CONTACT_STATUS),
+  })
   @IsOptional()
   @IsString()
   contact_status?: string;

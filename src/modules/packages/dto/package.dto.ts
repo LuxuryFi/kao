@@ -29,25 +29,30 @@ export class UpdatePackageDto {
   @IsNumber()
   package_id: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  package_name: string;
+  package_name?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsNumber()
-  quantity: number;
+  quantity?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsNumber()
-  price: number;
+  price?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  summary: string;
+  summary?: string;
 
-  @ApiProperty({ description: 'Package status: 1=active, 0=inactive' })
+  @ApiProperty({ description: 'Package status: 1=active, 0=inactive', required: false })
+  @IsOptional()
   @IsNumber()
-  status: number;
+  status?: number;
 }
 
 export class DeletePackageDto {

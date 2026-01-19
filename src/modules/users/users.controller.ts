@@ -129,7 +129,8 @@ export class UserController {
     name: 'role',
     required: false,
     description:
-      'Filter by role(s). Accepts comma-separated or repeated query params',
+      'Filter by role(s). Accepts comma-separated or repeated query params. Allowed roles: ' +
+      ALLOWED_ROLES.join(', '),
     isArray: true,
     type: String,
   })

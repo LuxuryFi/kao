@@ -29,26 +29,30 @@ export class UpdateCourtDto {
   @IsNumber()
   courts_id: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsString()
-  address: string;
-
-  @ApiProperty()
-  @IsString()
-  city: string;
+  name?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  description: string;
+  address?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  district: string;
+  city?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  district?: string;
 }
 
 export class DeleteCourtDto {

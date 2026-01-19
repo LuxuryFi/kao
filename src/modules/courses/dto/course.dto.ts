@@ -35,22 +35,31 @@ export class UpdateCourseDto {
   @IsNumber()
   course_id: number;
 
-  @ApiProperty()
-  @IsString()
-  course_name: string;
-
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ required: false })
   @IsOptional()
-  summary: string;
-
-  @ApiProperty({ description: 'JSON string { day: [2,3,4], hour: "14:00" }' })
   @IsString()
-  schedule: string;
+  course_name?: string;
 
-  @ApiProperty({ description: 'Court ID this course belongs to' })
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  summary?: string;
+
+  @ApiProperty({
+    description: 'JSON string { day: [2,3,4], hour: "14:00" }',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  schedule?: string;
+
+  @ApiProperty({
+    description: 'Court ID this course belongs to',
+    required: false,
+  })
+  @IsOptional()
   @IsNumber()
-  court_id: number;
+  court_id?: number;
 
   @ApiProperty({ description: 'Optional end time (HH:mm)', required: false })
   @IsOptional()

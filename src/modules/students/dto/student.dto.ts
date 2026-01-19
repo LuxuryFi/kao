@@ -88,7 +88,8 @@ export class SearchStudentDto {
   phone?: string;
 
   @ApiProperty({
-    description: 'Student status: trial, active, inactive',
+    description:
+      'Student status. Example values: TRIAL, ACTIVE, INACTIVE (string codes, FE can map to Vietnamese labels).',
     required: false,
   })
   @IsOptional()
@@ -96,7 +97,8 @@ export class SearchStudentDto {
   status?: string;
 
   @ApiProperty({
-    description: 'Trial status: TRIAL_REGISTERED, TRIAL_ATTENDED',
+    description:
+      'Trial status. One of: TRIAL_REGISTERED (đã đăng ký học thử), TRIAL_ATTENDED (đã đến học thử).',
     required: false,
   })
   @IsOptional()

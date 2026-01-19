@@ -20,7 +20,9 @@ export class CreateTeachingScheduleDto {
   time: string;
 
   @ApiProperty({
-    description: 'Status',
+    description:
+      'Teaching schedule status. One of: ' +
+      Object.values(TEACHING_SCHEDULE_STATUS).join(', '),
     enum: TEACHING_SCHEDULE_STATUS,
     required: false,
     default: TEACHING_SCHEDULE_STATUS.UPCOMING,
@@ -56,7 +58,9 @@ export class UpdateTeachingScheduleDto {
   time?: string;
 
   @ApiProperty({
-    description: 'Status',
+    description:
+      'Teaching schedule status. One of: ' +
+      Object.values(TEACHING_SCHEDULE_STATUS).join(', '),
     enum: TEACHING_SCHEDULE_STATUS,
     required: false,
   })
@@ -87,7 +91,9 @@ export class SearchTeachingScheduleDto {
   time?: string;
 
   @ApiProperty({
-    description: 'Status',
+    description:
+      'Teaching schedule status. One of: ' +
+      Object.values(TEACHING_SCHEDULE_STATUS).join(', '),
     enum: TEACHING_SCHEDULE_STATUS,
     required: false,
   })

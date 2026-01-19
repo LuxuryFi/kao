@@ -1,0 +1,9 @@
+export const TEACHING_SCHEDULE_STATUS = {
+  UPCOMING: 'UPCOMING',
+  NOT_CHECKED_IN: 'NOT_CHECKED_IN',
+  CHECKED_IN: 'CHECKED_IN',
+} as const;
+
+export type TeachingScheduleStatus =
+  (typeof TEACHING_SCHEDULE_STATUS)[keyof typeof TEACHING_SCHEDULE_STATUS];
+

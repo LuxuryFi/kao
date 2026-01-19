@@ -26,6 +26,21 @@ export class CourseEntity extends BaseEntity {
   @Column({ type: 'text' })
   schedule: string;
 
+  @ApiProperty({
+    description: 'Optional end time (HH:mm)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  end_time?: string;
+
+  @ApiProperty({ description: 'Lead user id', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Column({ type: 'int', nullable: true })
+  lead_id?: number;
+
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })

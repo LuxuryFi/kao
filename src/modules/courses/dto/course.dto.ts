@@ -18,6 +18,16 @@ export class CreateCourseDto {
   @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()
   court_id: number;
+
+  @ApiProperty({ description: 'Optional end time (HH:mm)', required: false })
+  @IsOptional()
+  @IsString()
+  end_time?: string;
+
+  @ApiProperty({ description: 'Lead user id', required: false })
+  @IsOptional()
+  @IsNumber()
+  lead_id?: number;
 }
 
 export class UpdateCourseDto {
@@ -41,6 +51,16 @@ export class UpdateCourseDto {
   @ApiProperty({ description: 'Court ID this course belongs to' })
   @IsNumber()
   court_id: number;
+
+  @ApiProperty({ description: 'Optional end time (HH:mm)', required: false })
+  @IsOptional()
+  @IsString()
+  end_time?: string;
+
+  @ApiProperty({ description: 'Lead user id', required: false })
+  @IsOptional()
+  @IsNumber()
+  lead_id?: number;
 }
 
 export class DeleteCourseDto {

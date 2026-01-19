@@ -17,6 +17,8 @@ import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import { CoursesService } from './courses.service';
+import { CourseStaffService } from '../course-staff/course-staff.service';
+import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
 import {
   CreateCourseDto,
   DeleteCourseDto,
@@ -26,7 +28,10 @@ import {
 @Controller('courses')
 @ApiTags('Courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    private readonly courseStaffService: CourseStaffService,
+  ) {}
 
   @Post()
   @UseGuards(AccessTokenGuard)
@@ -89,20 +94,20 @@ export class CoursesController {
     @Query('select') select?: string,
   ) {
     try {
-      const [result, totalCount] =
-        await this.coursesService.findFilteredPaginated({
-          keyword,
-          status,
-          court_id: court_id ? Number(court_id) : undefined,
-          skip: skip ? Number(skip) : 0,
-          select: select ? Number(select) : 20,
-        });
-      return sendResponse(
-        res,
-        HttpStatusCodes.OK,
-        { result, totalCount },
-        null,
-      );
+      const [result, totalCount] = await this.coursesService.findFilteredPaginated({
+        keyword,
+        status,
+        court_id: court_id ? Number(court_id) : undefined,
+        skip: skip ? Number(skip) : 0,
+        select: select ? Number(select) : 20,
+      });
+      const courseIds = result.map((c) => c.id);
+      const staffByCourse = await this.loadStaffMap(courseIds);
+      const mapped = result.map((c) => ({
+        ...c,
+        staff: staffByCourse.get(c.id) || [],
+      }));
+      return sendResponse(res, HttpStatusCodes.OK, { result: mapped, totalCount }, null);
     } catch (err) {
       return sendResponse(
         res,
@@ -128,7 +133,16 @@ export class CoursesController {
           'Course not found',
         );
       }
-      return sendResponse(res, HttpStatusCodes.OK, result, null);
+      const staff = await this.courseStaffService.search({ course_id: result.id });
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        {
+          ...result,
+          staff,
+        },
+        null,
+      );
     } catch (err) {
       return sendResponse(
         res,
@@ -177,5 +191,23 @@ export class CoursesController {
         err.message,
       );
     }
+  }
+  private async loadStaffMap(courseIds: number[]): Promise<Map<number, any[]>> {
+    const map = new Map<number, any[]>();
+    if (courseIds.length === 0) return map;
+    const all = await this.courseStaffService.search({ course_ids: courseIds });
+    for (const cId of courseIds) {
+      map.set(
+        cId,
+        all
+          .filter((s) => s.course_id === cId)
+          .map((s) => ({
+            id: s.id,
+            user_id: s.user_id,
+            role: s.role || COURSE_STAFF_ROLE.SUB_TUTOR,
+          })),
+      );
+    }
+    return map;
   }
 }

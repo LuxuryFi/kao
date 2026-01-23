@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
 
@@ -45,6 +46,7 @@ export class UpdateCourseStaffDto {
 export class SearchCourseStaffDto {
   @ApiProperty({ description: 'Course ID', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   course_id?: number;
 
@@ -54,6 +56,7 @@ export class SearchCourseStaffDto {
 
   @ApiProperty({ description: 'User ID', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   user_id?: number;
 }

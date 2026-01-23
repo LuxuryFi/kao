@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { TEACHING_SCHEDULE_STATUS } from 'src/constants/teaching-schedule-status';
 
@@ -72,11 +73,13 @@ export class UpdateTeachingScheduleDto {
 export class SearchTeachingScheduleDto {
   @ApiProperty({ description: 'Course ID', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   course_id?: number;
 
   @ApiProperty({ description: 'User ID', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   user_id?: number;
 
@@ -105,6 +108,7 @@ export class SearchTeachingScheduleDto {
 export class GenerateTeachingScheduleDto {
   @ApiProperty({ description: 'Course ID (optional)', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   course_id?: number;
 }

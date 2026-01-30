@@ -20,6 +20,7 @@ import {
   GenerateTeachingScheduleDto,
   SearchTeachingScheduleDto,
   UpdateTeachingScheduleDto,
+  UpdateTeachingScheduleStatusDto,
 } from './dto/teaching-schedule.dto';
 import { TeachingSchedulesService } from './teaching-schedules.service';
 
@@ -107,23 +108,69 @@ export class TeachingSchedulesController {
     }
   }
 
+  @Put(':id/status')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update status of teaching schedule' })
+  async updateStatus(
+    @Param('id') id: number,
+    @Body() dto: UpdateTeachingScheduleStatusDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.teachingSchedulesService.updateStatus(
+        Number(id),
+        dto.status,
+      );
+      if (!result) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.NOT_FOUND,
+          null,
+          'Teaching schedule not found',
+        );
+      }
+      return sendResponse(res, HttpStatusCodes.OK, result, null);
+    } catch (err) {
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
+    }
+  }
+
   @Put(':id/check-in')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Check-in / update status for teaching schedule' })
+  @ApiOperation({ summary: 'Check-in / update status for teaching schedule (deprecated, use PUT /:id/status)' })
   async checkIn(
     @Param('id') id: number,
     @Body() body: { status: string },
     @Res() res: Response,
   ) {
     try {
-      const result = await this.teachingSchedulesService.update({
-        id: Number(id),
-        status: body.status,
-      });
+      const result = await this.teachingSchedulesService.updateStatus(
+        Number(id),
+        body.status,
+      );
+      if (!result) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.NOT_FOUND,
+          null,
+          'Teaching schedule not found',
+        );
+      }
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 }

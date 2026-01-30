@@ -113,3 +113,14 @@ export class GenerateTeachingScheduleDto {
   course_id?: number;
 }
 
+export class UpdateTeachingScheduleStatusDto {
+  @ApiProperty({
+    description:
+      'Teaching schedule status. One of: ' +
+      Object.values(TEACHING_SCHEDULE_STATUS).join(', '),
+    enum: TEACHING_SCHEDULE_STATUS,
+  })
+  @IsEnum(TEACHING_SCHEDULE_STATUS as any)
+  status: string;
+}
+

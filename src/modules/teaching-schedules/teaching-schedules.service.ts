@@ -28,9 +28,11 @@ export class TeachingSchedulesService {
     private readonly courseRepo: Repository<CourseEntity>,
     @InjectRepository(CourseStaffEntity)
     private readonly courseStaffRepo: Repository<CourseStaffEntity>,
-  ) {}
+  ) { }
 
-  async create(dto: CreateTeachingScheduleDto): Promise<TeachingScheduleEntity> {
+  async create(
+    dto: CreateTeachingScheduleDto,
+  ): Promise<TeachingScheduleEntity> {
     const entity = this.scheduleRepo.create({
       ...dto,
       status: dto.status || TEACHING_SCHEDULE_STATUS.UPCOMING,
@@ -38,10 +40,22 @@ export class TeachingSchedulesService {
     return this.scheduleRepo.save(entity);
   }
 
-  async update(dto: UpdateTeachingScheduleDto): Promise<TeachingScheduleEntity | null> {
+  async update(
+    dto: UpdateTeachingScheduleDto,
+  ): Promise<TeachingScheduleEntity | null> {
     const entity = await this.scheduleRepo.findOne({ where: { id: dto.id } });
     if (!entity) return null;
     Object.assign(entity, dto);
+    return this.scheduleRepo.save(entity);
+  }
+
+  async updateStatus(
+    id: number,
+    status: string,
+  ): Promise<TeachingScheduleEntity | null> {
+    const entity = await this.scheduleRepo.findOne({ where: { id } });
+    if (!entity) return null;
+    entity.status = status;
     return this.scheduleRepo.save(entity);
   }
 
@@ -50,7 +64,9 @@ export class TeachingSchedulesService {
     return true;
   }
 
-  async search(q: SearchTeachingScheduleDto): Promise<TeachingScheduleEntity[]> {
+  async search(
+    q: SearchTeachingScheduleDto,
+  ): Promise<TeachingScheduleEntity[]> {
     const qb = this.scheduleRepo.createQueryBuilder('ts');
     if (q.course_id !== undefined) {
       qb.andWhere('ts.course_id = :course_id', { course_id: q.course_id });
@@ -73,17 +89,22 @@ export class TeachingSchedulesService {
 
   /**
    * Generate teaching schedule for next week based on course schedule and staff
+   * Updates existing records if staff/lead changed, preserves status and other info
    */
-  async generateNextWeek(dto: GenerateTeachingScheduleDto): Promise<{ generated: number }> {
+  async generateNextWeek(
+    dto: GenerateTeachingScheduleDto,
+  ): Promise<{ generated: number }> {
     const courses = await this.courseRepo.find(
-      dto.course_id ? { where: { id: dto.course_id, status: true } } : { where: { status: true } },
+      dto.course_id
+        ? { where: { id: dto.course_id, status: true } }
+        : { where: { status: true } },
     );
 
     const weekStart = this.getNextWeekMonday();
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    let count = 0;
+    let created = 0;
 
     for (const course of courses) {
       const parsed = this.parseSchedule(course.schedule);
@@ -97,7 +118,9 @@ export class TeachingSchedulesService {
       const staffList = [...staff];
       if (course['lead_id']) {
         const hasLead = staffList.some(
-          (s) => s.role === COURSE_STAFF_ROLE.LEAD && s.user_id === (course as any).lead_id,
+          (s) =>
+            s.role === COURSE_STAFF_ROLE.LEAD &&
+            s.user_id === (course as any).lead_id,
         );
         if (!hasLead) {
           staffList.push({
@@ -110,43 +133,92 @@ export class TeachingSchedulesService {
 
       if (staffList.length === 0) continue;
 
-      // remove existing schedules of that course in the target week
-      await this.scheduleRepo
-        .createQueryBuilder()
-        .delete()
-        .from(TeachingScheduleEntity)
-        .where('course_id = :course_id', { course_id: course.id })
-        .andWhere('date BETWEEN :start AND :end', {
-          start: this.toDateStr(weekStart),
-          end: this.toDateStr(weekEnd),
-        })
-        .execute();
+      // Get existing schedules for this course in the target week
+      const existingSchedules = await this.scheduleRepo.find({
+        where: {
+          course_id: course.id,
+        },
+      });
 
-      const inserts: TeachingScheduleEntity[] = [];
+      // Filter to only schedules in the target week
+      const existingInWeek = existingSchedules.filter((s) => {
+        const scheduleDate = new Date(s.date);
+        return scheduleDate >= weekStart && scheduleDate <= weekEnd;
+      });
+
+      // Create a map of existing schedules: key = "course_id-date-time-user_id"
+      const existingMap = new Map<string, TeachingScheduleEntity>();
+      for (const existing of existingInWeek) {
+        const key = `${existing.course_id}-${existing.date}-${existing.time}-${existing.user_id}`;
+        existingMap.set(key, existing);
+      }
+
+      // Build expected schedules
+      const expectedSchedules: Array<{
+        course_id: number;
+        date: string;
+        time: string;
+        user_id: number;
+      }> = [];
+
       for (const d of parsed.day) {
         const targetDate = new Date(weekStart);
         targetDate.setDate(weekStart.getDate() + (d - 1));
         const dateStr = this.toDateStr(targetDate);
         for (const s of staffList) {
-          inserts.push(
-            this.scheduleRepo.create({
-              user_id: s.user_id,
-              course_id: course.id,
-              date: dateStr,
-              time: parsed.hour,
-              status: TEACHING_SCHEDULE_STATUS.UPCOMING,
-            }),
-          );
+          expectedSchedules.push({
+            course_id: course.id,
+            date: dateStr,
+            time: parsed.hour,
+            user_id: s.user_id,
+          });
         }
       }
 
-      if (inserts.length > 0) {
-        await this.scheduleRepo.save(inserts);
-        count += inserts.length;
+      // Process each expected schedule
+      const toCreate: TeachingScheduleEntity[] = [];
+      const expectedKeys = new Set<string>();
+
+      for (const expected of expectedSchedules) {
+        const key = `${expected.course_id}-${expected.date}-${expected.time}-${expected.user_id}`;
+        expectedKeys.add(key);
+
+        const existing = existingMap.get(key);
+        if (existing) {
+          // Schedule already exists with same course_id, date, time, user_id
+          // No need to update - preserve status and all other info
+          continue;
+        }
+
+        // New schedule, create it
+        toCreate.push(
+          this.scheduleRepo.create({
+            user_id: expected.user_id,
+            course_id: expected.course_id,
+            date: expected.date,
+            time: expected.time,
+            status: TEACHING_SCHEDULE_STATUS.UPCOMING,
+          }),
+        );
+      }
+
+      // Delete schedules that are no longer needed (staff removed from course or schedule changed)
+      const toDelete = existingInWeek.filter((existing) => {
+        const key = `${existing.course_id}-${existing.date}-${existing.time}-${existing.user_id}`;
+        return !expectedKeys.has(key);
+      });
+
+      if (toCreate.length > 0) {
+        await this.scheduleRepo.save(toCreate);
+        created += toCreate.length;
+      }
+
+      if (toDelete.length > 0) {
+        await this.scheduleRepo.remove(toDelete);
       }
     }
 
-    return { generated: count };
+    return { generated: created };
   }
 
   private parseSchedule(raw: string): ParsedSchedule | null {
@@ -176,5 +248,3 @@ export class TeachingSchedulesService {
     return d.toISOString().split('T')[0];
   }
 }
-
-

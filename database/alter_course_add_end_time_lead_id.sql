@@ -4,3 +4,4 @@ ALTER TABLE `course`
 
 CREATE INDEX `idx_course_lead` ON `course` (`lead_id`);
 
+

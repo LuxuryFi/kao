@@ -44,3 +44,4 @@ export class TeachingScheduleEntity extends BaseEntity {
   updated_date?: Date;
 }
 
+

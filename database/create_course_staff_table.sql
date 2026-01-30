@@ -20,3 +20,4 @@ CREATE TABLE IF NOT EXISTS `course_staff` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Course staff (lead / sub tutor / manager)';
 
+

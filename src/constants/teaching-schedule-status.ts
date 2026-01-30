@@ -7,3 +7,4 @@ export const TEACHING_SCHEDULE_STATUS = {
 export type TeachingScheduleStatus =
   (typeof TEACHING_SCHEDULE_STATUS)[keyof typeof TEACHING_SCHEDULE_STATUS];
 
+

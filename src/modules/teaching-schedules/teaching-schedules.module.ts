@@ -16,3 +16,4 @@ import { TeachingScheduleEntity } from './entities/teaching-schedule.entity';
 })
 export class TeachingSchedulesModule {}
 
+

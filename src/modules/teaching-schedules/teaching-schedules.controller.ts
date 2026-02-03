@@ -10,7 +10,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
@@ -29,7 +34,9 @@ import { TeachingSchedulesService } from './teaching-schedules.service';
 @Controller('teaching-schedules')
 @ApiTags('Teaching Schedules')
 export class TeachingSchedulesController {
-  constructor(private readonly teachingSchedulesService: TeachingSchedulesService) { }
+  constructor(
+    private readonly teachingSchedulesService: TeachingSchedulesService,
+  ) { }
 
   @Post()
   @UseGuards(AccessTokenGuard)
@@ -40,7 +47,12 @@ export class TeachingSchedulesController {
       const result = await this.teachingSchedulesService.create(dto);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -54,10 +66,18 @@ export class TeachingSchedulesController {
     @Res() res: Response,
   ) {
     try {
-      const result = await this.teachingSchedulesService.update({ ...dto, id: Number(id) });
+      const result = await this.teachingSchedulesService.update({
+        ...dto,
+        id: Number(id),
+      });
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -70,7 +90,12 @@ export class TeachingSchedulesController {
       const result = await this.teachingSchedulesService.delete(Number(id));
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -91,7 +116,12 @@ export class TeachingSchedulesController {
         null,
       );
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -99,14 +129,23 @@ export class TeachingSchedulesController {
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Generate next-week teaching schedules from course schedule and staff',
+    summary:
+      'Generate next-week teaching schedules from course schedule and staff',
   })
-  async generate(@Body() dto: GenerateTeachingScheduleDto, @Res() res: Response) {
+  async generate(
+    @Body() dto: GenerateTeachingScheduleDto,
+    @Res() res: Response,
+  ) {
     try {
       const result = await this.teachingSchedulesService.generateNextWeek(dto);
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, null, err.message);
+      return sendResponse(
+        res,
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        null,
+        err.message,
+      );
     }
   }
 
@@ -116,7 +155,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Update status of teaching schedule',
     description:
-      'Requires lat/long for location verification. Must be within 100m of the court location.',
+      'Requires lat/long for location verification. Must be within 150m of the court location.',
   })
   async updateStatus(
     @Param('id') id: number,
@@ -154,7 +193,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-in for teaching schedule',
     description:
-      'Requires lat/long for location verification. Must be within 100m of the court location. Automatically sets status to CHECKED_IN.',
+      'Requires lat/long for location verification (within 150m). Automatically sets status to CHECKED_IN or CHECKED_IN_LATE based on time window.',
   })
   async checkIn(
     @Param('id') id: number,
@@ -191,7 +230,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-out for teaching schedule',
     description:
-      'Requires lat/long for location verification. Must be within 100m of the court location. Updates status to CHECKED_OUT.',
+      'Requires lat/long for location verification (within 150m). Updates status to CHECKED_OUT or CHECKED_OUT_EARLY based on end time.',
   })
   async checkOut(
     @Param('id') id: number,
@@ -222,5 +261,3 @@ export class TeachingSchedulesController {
     }
   }
 }
-
-

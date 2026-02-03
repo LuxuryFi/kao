@@ -144,7 +144,8 @@ export class UpdateTeachingScheduleStatusDto {
 
 export class CheckInTeachingScheduleDto {
   @ApiProperty({
-    description: 'Latitude for location verification (must be within 100m of court)',
+    description:
+      'Latitude for location verification (must be within 150m of court)',
     required: true,
   })
   @Type(() => Number)
@@ -152,7 +153,8 @@ export class CheckInTeachingScheduleDto {
   lat: number;
 
   @ApiProperty({
-    description: 'Longitude for location verification (must be within 100m of court)',
+    description:
+      'Longitude for location verification (must be within 150m of court)',
     required: true,
   })
   @Type(() => Number)
@@ -162,7 +164,8 @@ export class CheckInTeachingScheduleDto {
 
 export class CheckOutTeachingScheduleDto {
   @ApiProperty({
-    description: 'Latitude for location verification (must be within 100m of court)',
+    description:
+      'Latitude for location verification (must be within 150m of court)',
     required: true,
   })
   @Type(() => Number)
@@ -170,11 +173,11 @@ export class CheckOutTeachingScheduleDto {
   lat: number;
 
   @ApiProperty({
-    description: 'Longitude for location verification (must be within 100m of court)',
+    description:
+      'Longitude for location verification (must be within 150m of court)',
     required: true,
   })
   @Type(() => Number)
   @IsNumber()
   long: number;
 }
-

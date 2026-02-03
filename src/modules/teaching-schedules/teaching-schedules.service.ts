@@ -81,9 +81,12 @@ export class TeachingSchedulesService {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
 
+    const now = new Date();
+
     // Check if already checked in
     if (
       entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_IN ||
+      entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_IN_LATE ||
       entity.checkin_time
     ) {
       throw new BadRequestException(
@@ -94,9 +97,36 @@ export class TeachingSchedulesService {
     // Location verification is mandatory for check-in
     await this.validateLocation(entity.course_id, lat, long);
 
+    const course = await this.courseRepo.findOne({
+      where: { id: entity.course_id },
+    });
+    if (!course) {
+      throw new BadRequestException('Course not found.');
+    }
+
+    const startAt = this.buildLocalDateTime(entity.date, entity.time);
+
+    // Earliest check-in: max 2 hours before class start
+    const earliest = new Date(startAt.getTime() - 2 * 60 * 60 * 1000);
+    if (now.getTime() < earliest.getTime()) {
+      throw new BadRequestException(
+        'Too early to check in. You can only check in within 2 hours before class start.',
+      );
+    }
+
+    // If check-in after class start => late
+    const lateMinutes = Math.max(
+      0,
+      Math.ceil((now.getTime() - startAt.getTime()) / (60 * 1000)),
+    );
+
     // Automatically set status to CHECKED_IN
-    entity.status = TEACHING_SCHEDULE_STATUS.CHECKED_IN;
-    entity.checkin_time = new Date(); // Set check-in time
+    entity.status =
+      lateMinutes > 0
+        ? TEACHING_SCHEDULE_STATUS.CHECKED_IN_LATE
+        : TEACHING_SCHEDULE_STATUS.CHECKED_IN;
+    entity.checkin_time = now; // Set check-in time
+    entity.checkin_late_minutes = lateMinutes > 0 ? lateMinutes : 0;
     return this.scheduleRepo.save(entity);
   }
 
@@ -113,6 +143,8 @@ export class TeachingSchedulesService {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
 
+    const now = new Date();
+
     // Check if already checked out
     if (
       entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_OUT ||
@@ -126,25 +158,69 @@ export class TeachingSchedulesService {
     // Check if user has checked in first
     if (
       entity.status !== TEACHING_SCHEDULE_STATUS.CHECKED_IN &&
+      entity.status !== TEACHING_SCHEDULE_STATUS.CHECKED_IN_LATE &&
       !entity.checkin_time
     ) {
-      throw new BadRequestException(
-        'You must check in before checking out.',
-      );
+      throw new BadRequestException('You must check in before checking out.');
     }
 
     // Location verification is mandatory for check-out
     await this.validateLocation(entity.course_id, lat, long);
 
-    // Update status to CHECKED_OUT and set check-out time
-    entity.status = TEACHING_SCHEDULE_STATUS.CHECKED_OUT;
-    entity.checkout_time = new Date(); // Set check-out time
+    const course = await this.courseRepo.findOne({
+      where: { id: entity.course_id },
+    });
+    if (!course) {
+      throw new BadRequestException('Course not found.');
+    }
+
+    const endTimeStr =
+      course.end_time || this.parseScheduleEndTime(course.schedule);
+    if (!endTimeStr) {
+      throw new BadRequestException(
+        'Course end_time is required to check out (missing course.end_time / schedule.end_time).',
+      );
+    }
+
+    const endAt = this.buildLocalDateTime(entity.date, endTimeStr);
+
+    const earlyMinutes = Math.max(
+      0,
+      Math.ceil((endAt.getTime() - now.getTime()) / (60 * 1000)),
+    );
+
+    // If checkout before class end => CHECKED_OUT_EARLY
+    entity.status =
+      earlyMinutes > 0
+        ? TEACHING_SCHEDULE_STATUS.CHECKED_OUT_EARLY
+        : TEACHING_SCHEDULE_STATUS.CHECKED_OUT;
+
+    entity.checkout_time = now; // Set check-out time
+    entity.checkout_early_minutes = earlyMinutes > 0 ? earlyMinutes : 0;
     return this.scheduleRepo.save(entity);
+  }
+
+  private buildLocalDateTime(dateStr: string, timeStr: string): Date {
+    // Expect dateStr: YYYY-MM-DD, timeStr: HH:mm (or HH:mm:ss)
+    const isoLike = `${dateStr}T${timeStr.length === 5 ? `${timeStr}:00` : timeStr}`;
+    const d = new Date(isoLike);
+    if (Number.isNaN(d.getTime())) {
+      throw new BadRequestException(
+        `Invalid date/time format. date=${dateStr}, time=${timeStr}`,
+      );
+    }
+    return d;
+  }
+
+  private parseScheduleEndTime(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    const parsed = this.parseSchedule(raw);
+    return parsed?.end_time || null;
   }
 
   /**
    * Validate location against court location
-   * @throws BadRequestException if distance > 100m
+   * @throws BadRequestException if distance > 150m or court_id not configured
    */
   private async validateLocation(
     courseId: number,
@@ -156,20 +232,34 @@ export class TeachingSchedulesService {
       where: { id: courseId },
     });
 
-    if (course && course.court_id) {
-      const courtLocation = COURT_LOCATIONS[course.court_id];
-      if (courtLocation) {
-        const [courtLat, courtLong] = courtLocation;
-        const distance = this.calculateDistance(lat, long, courtLat, courtLong);
+    if (!course) {
+      throw new BadRequestException('Course not found.');
+    }
 
-        if (distance > 100) {
-          throw new BadRequestException(
-            `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
-              `Required distance: within 100m. ` +
-              `Court location: ${courtLat}, ${courtLong}`,
-          );
-        }
+    // If course has court_id, it must be configured in COURT_LOCATIONS
+    if (course.court_id) {
+      const courtLocation = COURT_LOCATIONS[course.court_id];
+      if (!courtLocation) {
+        throw new BadRequestException(
+          `Location verification failed: Court ID ${course.court_id} is not configured for location validation.`,
+        );
       }
+
+      const [courtLat, courtLong] = courtLocation;
+      const distance = this.calculateDistance(lat, long, courtLat, courtLong);
+
+      if (distance > 150) {
+        throw new BadRequestException(
+          `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
+          `Required distance: within 150m. ` +
+          `Court location: ${courtLat}, ${courtLong}`,
+        );
+      }
+    } else {
+      // If course doesn't have court_id, reject check-in/check-out
+      throw new BadRequestException(
+        'Location verification failed: Course does not have a court assigned. Check-in/check-out is not allowed.',
+      );
     }
   }
 

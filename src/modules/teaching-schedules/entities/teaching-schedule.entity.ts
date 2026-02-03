@@ -41,10 +41,27 @@ export class TeachingScheduleEntity extends BaseEntity {
   @Column({ type: 'datetime', nullable: true })
   checkin_time?: Date;
 
+  @ApiProperty({
+    description: 'Check-in late minutes (only when status = CHECKED_IN_LATE)',
+    required: false,
+  })
+  @IsOptional()
+  @Column({ type: 'int', nullable: true })
+  checkin_late_minutes?: number;
+
   @ApiProperty({ type: Date, description: 'Check-out time', required: false })
   @IsOptional()
   @Column({ type: 'datetime', nullable: true })
   checkout_time?: Date;
+
+  @ApiProperty({
+    description:
+      'Check-out early minutes (only when status = CHECKED_OUT_EARLY)',
+    required: false,
+  })
+  @IsOptional()
+  @Column({ type: 'int', nullable: true })
+  checkout_early_minutes?: number;
 
   @ApiProperty({ type: Date, description: 'Creation date' })
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
@@ -55,5 +72,3 @@ export class TeachingScheduleEntity extends BaseEntity {
   @Column({ type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
   updated_date?: Date;
 }
-
-

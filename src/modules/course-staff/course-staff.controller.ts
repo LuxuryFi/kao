@@ -15,17 +15,17 @@ import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
+import { CourseStaffService } from './course-staff.service';
 import {
   CreateCourseStaffDto,
   SearchCourseStaffDto,
   UpdateCourseStaffDto,
 } from './dto/course-staff.dto';
-import { CourseStaffService } from './course-staff.service';
 
 @Controller('course-staff')
 @ApiTags('Course Staff')
 export class CourseStaffController {
-  constructor(private readonly courseStaffService: CourseStaffService) {}
+  constructor(private readonly courseStaffService: CourseStaffService) { }
 
   @Post()
   @UseGuards(AccessTokenGuard)

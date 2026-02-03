@@ -39,6 +39,26 @@ export class CoursesController {
   @ApiOperation({ summary: 'Create Course' })
   async create(@Body() data: CreateCourseDto, @Res() res: Response, @Req() req: any) {
     try {
+      // Check schedule conflict if lead_id is provided
+      if (data.lead_id) {
+        // We need to create the course first to get its ID, then check
+        // But we can't check before creating. So we'll check after and rollback if needed.
+        // Actually, better approach: check with a temporary course_id that we'll use
+        // For now, let's check against existing courses for this user
+        // We'll do a simplified check: get all courses where user is staff/lead
+        const existingCourseStaff = await this.courseStaffService.search({
+          user_id: data.lead_id,
+        });
+        const existingCourseIds = existingCourseStaff.map((cs) => cs.course_id);
+
+        const leadCourses = await this.coursesService.find({
+          where: existingCourseIds.map((id) => ({ id, status: true })),
+        });
+
+        // We can't fully validate without course ID, so we'll validate after creation
+        // But for now, let's create and then validate
+      }
+
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const createdBy = req.user?.username || 'system';
       const payload = {
@@ -47,6 +67,18 @@ export class CoursesController {
         created_by: createdBy,
       } as any;
       const result = await this.coursesService.store(payload);
+
+      // Check schedule conflict after creation (if lead_id exists)
+      if (data.lead_id) {
+        try {
+          await this.courseStaffService.checkScheduleConflict(data.lead_id, result.id);
+        } catch (conflictError) {
+          // Rollback: delete the course if conflict detected
+          await this.coursesService.delete(result.id);
+          throw conflictError;
+        }
+      }
+
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
       return sendResponse(
@@ -76,6 +108,11 @@ export class CoursesController {
     description: 'Filter by court ID',
   })
   @ApiQuery({
+    name: 'staff_id',
+    required: false,
+    description: 'Filter courses where user is lead or course staff (user ID)',
+  })
+  @ApiQuery({
     name: 'skip',
     required: false,
     description: 'Items to skip (offset)',
@@ -90,6 +127,7 @@ export class CoursesController {
     @Query('keyword') keyword?: string,
     @Query('status') status?: string,
     @Query('court_id') court_id?: string,
+    @Query('staff_id') staff_id?: string,
     @Query('skip') skip?: string,
     @Query('select') select?: string,
   ) {
@@ -98,6 +136,7 @@ export class CoursesController {
         keyword,
         status,
         court_id: court_id ? Number(court_id) : undefined,
+        staff_id: staff_id ? Number(staff_id) : undefined,
         skip: skip ? Number(skip) : 0,
         select: select ? Number(select) : 20,
       });
@@ -159,9 +198,21 @@ export class CoursesController {
   @ApiOperation({ summary: 'Update Course' })
   async update(@Body() data: UpdateCourseDto, @Res() res: Response, @Req() req: any) {
     try {
-      const { course_id, ...rest } = data as any;
+      const { course_id, lead_id, ...rest } = data as any;
       const updatedBy = req.user?.username || 'system';
-      await this.coursesService.update(course_id, { ...rest, updated_by: updatedBy });
+
+      // Check schedule conflict if lead_id is being updated
+      if (lead_id !== undefined) {
+        const existing = await this.coursesService.findOne({
+          where: { id: course_id },
+        });
+        // Only check if lead_id is actually changing
+        if (existing && existing.lead_id !== lead_id) {
+          await this.courseStaffService.checkScheduleConflict(lead_id, course_id);
+        }
+      }
+
+      await this.coursesService.update(course_id, { ...rest, lead_id, updated_by: updatedBy });
       const updated = await this.coursesService.findOne({
         where: { id: course_id },
       });

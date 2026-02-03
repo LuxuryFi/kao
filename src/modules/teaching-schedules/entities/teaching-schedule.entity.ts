@@ -31,7 +31,8 @@ export class TeachingScheduleEntity extends BaseEntity {
 
   @IsString()
   @ApiProperty({
-    description: 'Status: UPCOMING | NOT_CHECKED_IN | CHECKED_IN | CHECKED_OUT',
+    description:
+      'Status: UPCOMING | NOT_CHECKED_IN | CHECKED_IN | CHECKED_IN_LATE | CHECKED_OUT | CHECKED_OUT_EARLY | ABSENT',
   })
   @Column({ type: 'varchar', length: 50, default: 'UPCOMING', nullable: false })
   status: string;

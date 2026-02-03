@@ -5,9 +5,8 @@ export const TEACHING_SCHEDULE_STATUS = {
   CHECKED_IN_LATE: 'CHECKED_IN_LATE',
   CHECKED_OUT: 'CHECKED_OUT',
   CHECKED_OUT_EARLY: 'CHECKED_OUT_EARLY',
+  ABSENT: 'ABSENT',
 } as const;
 
 export type TeachingScheduleStatus =
   (typeof TEACHING_SCHEDULE_STATUS)[keyof typeof TEACHING_SCHEDULE_STATUS];
-
-

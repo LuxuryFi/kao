@@ -83,6 +83,12 @@ export class TeachingSchedulesService {
 
     const now = new Date();
 
+    if (entity.status === TEACHING_SCHEDULE_STATUS.ABSENT) {
+      throw new BadRequestException(
+        'This teaching schedule has been marked as ABSENT and cannot be checked in.',
+      );
+    }
+
     // Check if already checked in
     if (
       entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_IN ||
@@ -145,6 +151,12 @@ export class TeachingSchedulesService {
 
     const now = new Date();
 
+    if (entity.status === TEACHING_SCHEDULE_STATUS.ABSENT) {
+      throw new BadRequestException(
+        'This teaching schedule has been marked as ABSENT and cannot be checked out.',
+      );
+    }
+
     // Check if already checked out
     if (
       entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_OUT ||
@@ -198,6 +210,24 @@ export class TeachingSchedulesService {
     entity.checkout_time = now; // Set check-out time
     entity.checkout_early_minutes = earlyMinutes > 0 ? earlyMinutes : 0;
     return this.scheduleRepo.save(entity);
+  }
+
+  async markAbsentsForDate(dateStr: string): Promise<{ updated: number }> {
+    const res = await this.scheduleRepo
+      .createQueryBuilder()
+      .update(TeachingScheduleEntity)
+      .set({ status: TEACHING_SCHEDULE_STATUS.ABSENT })
+      .where('date = :date', { date: dateStr })
+      .andWhere('checkin_time IS NULL')
+      .andWhere('status IN (:...statuses)', {
+        statuses: [
+          TEACHING_SCHEDULE_STATUS.UPCOMING,
+          TEACHING_SCHEDULE_STATUS.NOT_CHECKED_IN,
+        ],
+      })
+      .execute();
+
+    return { updated: res.affected || 0 };
   }
 
   private buildLocalDateTime(dateStr: string, timeStr: string): Date {

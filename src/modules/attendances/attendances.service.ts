@@ -51,17 +51,23 @@ export class AttendancesService {
    * Tạo attendance tự động khi student có cả course active và subscription
    */
   async autoCreateAttendances(studentId: number): Promise<AttendanceEntity[]> {
-    console.log(`[AttendancesService] autoCreateAttendances called for student ${studentId}`);
+    console.log(
+      `[AttendancesService] autoCreateAttendances called for student ${studentId}`,
+    );
 
     // 1. Lấy danh sách course active của student
     const activeCourses = await this.courseStudentRepo.find({
       where: { student_id: studentId, status: true },
     });
 
-    console.log(`[AttendancesService] Found ${activeCourses.length} active courses for student ${studentId}`);
+    console.log(
+      `[AttendancesService] Found ${activeCourses.length} active courses for student ${studentId}`,
+    );
 
     if (activeCourses.length === 0) {
-      console.log(`[AttendancesService] No active courses found, skipping attendance creation`);
+      console.log(
+        `[AttendancesService] No active courses found, skipping attendance creation`,
+      );
       return [];
     }
 
@@ -70,10 +76,17 @@ export class AttendancesService {
       where: { student_id: studentId, status: 1, deleted: 0 },
     });
 
-    console.log(`[AttendancesService] Subscription found:`, subscription ? `id=${subscription.subscription_id}, start_date=${subscription.start_date}` : 'none');
+    console.log(
+      `[AttendancesService] Subscription found:`,
+      subscription
+        ? `id=${subscription.subscription_id}, start_date=${subscription.start_date}`
+        : 'none',
+    );
 
     if (!subscription || !subscription.start_date) {
-      console.log(`[AttendancesService] No subscription or start_date found, skipping attendance creation`);
+      console.log(
+        `[AttendancesService] No subscription or start_date found, skipping attendance creation`,
+      );
       return [];
     }
 
@@ -199,15 +212,33 @@ export class AttendancesService {
     }
 
     // 9. Lưu tất cả attendance vào database
-    console.log(`[AttendancesService] Prepared ${attendances.length} attendance records to save`);
+    console.log(
+      `[AttendancesService] Prepared ${attendances.length} attendance records to save`,
+    );
     if (attendances.length > 0) {
       const saved = await this.attendanceRepo.save(attendances);
-      console.log(`[AttendancesService] Successfully saved ${saved.length} attendance records`);
+      console.log(
+        `[AttendancesService] Successfully saved ${saved.length} attendance records`,
+      );
       return saved;
     }
 
     console.log(`[AttendancesService] No attendance records to save`);
     return [];
+  }
+
+  async markAbsentsForDate(dateStr: string): Promise<{ updated: number }> {
+    const res = await this.attendanceRepo
+      .createQueryBuilder()
+      .update(AttendanceEntity)
+      .set({ status: ATTENDANCE_STATUS.ABSENT_NO_REASON })
+      .where('date = :date', { date: dateStr })
+      .andWhere('status = :status', {
+        status: ATTENDANCE_STATUS.NOT_CHECKED_IN,
+      })
+      .execute();
+
+    return { updated: res.affected || 0 };
   }
 
   async create(data: CreateAttendanceDto): Promise<AttendanceEntity> {
@@ -235,7 +266,7 @@ export class AttendancesService {
       where: { id: data.id },
     });
     if (!entity) return null;
-    
+
     const oldStatus = entity.status;
     Object.assign(entity, data);
     const saved = await this.attendanceRepo.save(entity);
@@ -400,13 +431,17 @@ export class AttendancesService {
       error?: string;
     }>;
   }> {
-    console.log(`[AttendancesService] Starting createAttendancesForAllUsers, role filter: ${role || 'all'}`);
+    console.log(
+      `[AttendancesService] Starting createAttendancesForAllUsers, role filter: ${role || 'all'}`,
+    );
 
     // 1. Lấy tất cả students
     const query = this.studentRepo.createQueryBuilder('student');
     const students = await query.getMany();
 
-    console.log(`[AttendancesService] Found ${students.length} students to process`);
+    console.log(
+      `[AttendancesService] Found ${students.length} students to process`,
+    );
 
     const result = {
       totalUsers: students.length,
@@ -427,7 +462,7 @@ export class AttendancesService {
 
     // 2. Xử lý từng student
     for (const student of students) {
-      const detail: typeof result.details[0] = {
+      const detail: (typeof result.details)[0] = {
         userId: student.id,
         userName: student.name,
         hasActiveCourses: false,
@@ -445,7 +480,9 @@ export class AttendancesService {
         });
 
         if (existingAttendances.length > 0) {
-          console.log(`[AttendancesService] Student ${student.id} already has ${existingAttendances.length} attendances, skipping`);
+          console.log(
+            `[AttendancesService] Student ${student.id} already has ${existingAttendances.length} attendances, skipping`,
+          );
           detail.status = 'skipped';
           detail.error = 'Already has attendances';
           result.skippedUsers++;
@@ -460,7 +497,9 @@ export class AttendancesService {
         detail.hasActiveCourses = activeCourses.length > 0;
 
         if (!detail.hasActiveCourses) {
-          console.log(`[AttendancesService] Student ${student.id} has no active courses, skipping`);
+          console.log(
+            `[AttendancesService] Student ${student.id} has no active courses, skipping`,
+          );
           detail.status = 'skipped';
           detail.error = 'No active courses';
           result.skippedUsers++;
@@ -476,7 +515,9 @@ export class AttendancesService {
         detail.hasStartDate = !!(subscription && subscription.start_date);
 
         if (!subscription || !subscription.start_date) {
-          console.log(`[AttendancesService] Student ${student.id} has no subscription or start_date, skipping`);
+          console.log(
+            `[AttendancesService] Student ${student.id} has no subscription or start_date, skipping`,
+          );
           detail.status = 'skipped';
           detail.error = !subscription ? 'No subscription' : 'No start_date';
           result.skippedUsers++;
@@ -491,9 +532,14 @@ export class AttendancesService {
         result.createdAttendances += attendances.length;
         result.processedUsers++;
 
-        console.log(`[AttendancesService] Created ${attendances.length} attendances for student ${student.id}`);
+        console.log(
+          `[AttendancesService] Created ${attendances.length} attendances for student ${student.id}`,
+        );
       } catch (error) {
-        console.error(`[AttendancesService] Error processing student ${student.id}:`, error);
+        console.error(
+          `[AttendancesService] Error processing student ${student.id}:`,
+          error,
+        );
         detail.status = 'error';
         detail.error = error.message || 'Unknown error';
         result.skippedUsers++;
@@ -502,7 +548,9 @@ export class AttendancesService {
       result.details.push(detail);
     }
 
-    console.log(`[AttendancesService] Completed: ${result.processedUsers} processed, ${result.createdAttendances} attendances created, ${result.skippedUsers} skipped`);
+    console.log(
+      `[AttendancesService] Completed: ${result.processedUsers} processed, ${result.createdAttendances} attendances created, ${result.skippedUsers} skipped`,
+    );
 
     return result;
   }
@@ -590,7 +638,9 @@ export class AttendancesService {
     let reason = '';
 
     if (!subscription || !subscription.start_date) {
-      reason = !subscription ? 'Chưa có subscription' : 'Subscription chưa có start_date';
+      reason = !subscription
+        ? 'Chưa có subscription'
+        : 'Subscription chưa có start_date';
     } else if (courses.length === 0) {
       reason = 'Chưa tham gia lớp nào';
     } else {

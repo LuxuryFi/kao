@@ -14,6 +14,7 @@ import { CourseStaffModule } from '../course-staff/course-staff.module';
 import { CourseStudentsModule } from '../course-students/course-students.module';
 import { CoursesModule } from '../courses/courses.module';
 import { CourtsModule } from '../courts/courts.module';
+import { CronModule } from '../cron/cron.module';
 import { PackagesModule } from '../packages/packages.module';
 import { StudentsModule } from '../students/students.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
@@ -55,6 +56,7 @@ import { AppService } from './app.service';
     AttendancesModule,
     CourseStaffModule,
     TeachingSchedulesModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [
@@ -65,4 +67,4 @@ import { AppService } from './app.service';
     AppService,
   ],
 })
-export class AppModule { }
+export class AppModule {}

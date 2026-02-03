@@ -30,9 +30,21 @@ export class TeachingScheduleEntity extends BaseEntity {
   time: string;
 
   @IsString()
-  @ApiProperty({ description: 'Status: UPCOMING | NOT_CHECKED_IN | CHECKED_IN' })
+  @ApiProperty({
+    description: 'Status: UPCOMING | NOT_CHECKED_IN | CHECKED_IN | CHECKED_OUT',
+  })
   @Column({ type: 'varchar', length: 50, default: 'UPCOMING', nullable: false })
   status: string;
+
+  @ApiProperty({ type: Date, description: 'Check-in time', required: false })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true })
+  checkin_time?: Date;
+
+  @ApiProperty({ type: Date, description: 'Check-out time', required: false })
+  @IsOptional()
+  @Column({ type: 'datetime', nullable: true })
+  checkout_time?: Date;
 
   @ApiProperty({ type: Date, description: 'Creation date' })
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })

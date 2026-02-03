@@ -14,11 +14,11 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
+import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
-import { CoursesService } from './courses.service';
 import { CourseStaffService } from '../course-staff/course-staff.service';
-import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
+import { CoursesService } from './courses.service';
 import {
   CreateCourseDto,
   DeleteCourseDto,
@@ -31,7 +31,7 @@ export class CoursesController {
   constructor(
     private readonly coursesService: CoursesService,
     private readonly courseStaffService: CourseStaffService,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AccessTokenGuard)

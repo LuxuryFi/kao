@@ -16,6 +16,8 @@ import { HttpStatusCodes } from 'src/constants/common';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
 import {
+  CheckInTeachingScheduleDto,
+  CheckOutTeachingScheduleDto,
   CreateTeachingScheduleDto,
   GenerateTeachingScheduleDto,
   SearchTeachingScheduleDto,
@@ -27,7 +29,7 @@ import { TeachingSchedulesService } from './teaching-schedules.service';
 @Controller('teaching-schedules')
 @ApiTags('Teaching Schedules')
 export class TeachingSchedulesController {
-  constructor(private readonly teachingSchedulesService: TeachingSchedulesService) {}
+  constructor(private readonly teachingSchedulesService: TeachingSchedulesService) { }
 
   @Post()
   @UseGuards(AccessTokenGuard)
@@ -111,7 +113,11 @@ export class TeachingSchedulesController {
   @Put(':id/status')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update status of teaching schedule' })
+  @ApiOperation({
+    summary: 'Update status of teaching schedule',
+    description:
+      'Requires lat/long for location verification. Must be within 100m of the court location.',
+  })
   async updateStatus(
     @Param('id') id: number,
     @Body() dto: UpdateTeachingScheduleStatusDto,
@@ -121,6 +127,8 @@ export class TeachingSchedulesController {
       const result = await this.teachingSchedulesService.updateStatus(
         Number(id),
         dto.status,
+        dto.lat,
+        dto.long,
       );
       if (!result) {
         return sendResponse(
@@ -132,28 +140,32 @@ export class TeachingSchedulesController {
       }
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
-      );
+      const statusCode =
+        err.status === 400
+          ? HttpStatusCodes.BAD_REQUEST
+          : HttpStatusCodes.INTERNAL_SERVER_ERROR;
+      return sendResponse(res, statusCode, null, err.message);
     }
   }
 
   @Put(':id/check-in')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Check-in / update status for teaching schedule (deprecated, use PUT /:id/status)' })
+  @ApiOperation({
+    summary: 'Check-in for teaching schedule',
+    description:
+      'Requires lat/long for location verification. Must be within 100m of the court location. Automatically sets status to CHECKED_IN.',
+  })
   async checkIn(
     @Param('id') id: number,
-    @Body() body: { status: string },
+    @Body() dto: CheckInTeachingScheduleDto,
     @Res() res: Response,
   ) {
     try {
-      const result = await this.teachingSchedulesService.updateStatus(
+      const result = await this.teachingSchedulesService.checkIn(
         Number(id),
-        body.status,
+        dto.lat,
+        dto.long,
       );
       if (!result) {
         return sendResponse(
@@ -165,12 +177,48 @@ export class TeachingSchedulesController {
       }
       return sendResponse(res, HttpStatusCodes.OK, result, null);
     } catch (err) {
-      return sendResponse(
-        res,
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        null,
-        err.message,
+      const statusCode =
+        err.status === 400
+          ? HttpStatusCodes.BAD_REQUEST
+          : HttpStatusCodes.INTERNAL_SERVER_ERROR;
+      return sendResponse(res, statusCode, null, err.message);
+    }
+  }
+
+  @Put(':id/check-out')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Check-out for teaching schedule',
+    description:
+      'Requires lat/long for location verification. Must be within 100m of the court location. Updates status to CHECKED_OUT.',
+  })
+  async checkOut(
+    @Param('id') id: number,
+    @Body() dto: CheckOutTeachingScheduleDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.teachingSchedulesService.checkOut(
+        Number(id),
+        dto.lat,
+        dto.long,
       );
+      if (!result) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.NOT_FOUND,
+          null,
+          'Teaching schedule not found',
+        );
+      }
+      return sendResponse(res, HttpStatusCodes.OK, result, null);
+    } catch (err) {
+      const statusCode =
+        err.status === 400
+          ? HttpStatusCodes.BAD_REQUEST
+          : HttpStatusCodes.INTERNAL_SERVER_ERROR;
+      return sendResponse(res, statusCode, null, err.message);
     }
   }
 }

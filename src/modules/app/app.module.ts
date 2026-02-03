@@ -6,18 +6,18 @@ import { LoggerModule } from 'nestjs-pino';
 import { AnyExceptionFilter } from 'src/filters/any-exception.filter';
 import { loggerConfig } from 'src/shared/logger.helper';
 import { getMetadataArgsStorage } from 'typeorm';
-import { AuthModule } from '../auth/auth.module';
 import { AttendancesModule } from '../attendances/attendances.module';
-import { CourseStaffModule } from '../course-staff/course-staff.module';
+import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '../config/config.module';
 import { CONFIG } from '../config/config.provider';
+import { CourseStaffModule } from '../course-staff/course-staff.module';
 import { CourseStudentsModule } from '../course-students/course-students.module';
 import { CoursesModule } from '../courses/courses.module';
 import { CourtsModule } from '../courts/courts.module';
 import { PackagesModule } from '../packages/packages.module';
-import { TeachingSchedulesModule } from '../teaching-schedules/teaching-schedules.module';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { StudentsModule } from '../students/students.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { TeachingSchedulesModule } from '../teaching-schedules/teaching-schedules.module';
 import { UserModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -65,4 +65,4 @@ import { AppService } from './app.service';
     AppService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

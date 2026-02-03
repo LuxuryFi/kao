@@ -122,5 +122,59 @@ export class UpdateTeachingScheduleStatusDto {
   })
   @IsEnum(TEACHING_SCHEDULE_STATUS as any)
   status: string;
+
+  @ApiProperty({
+    description: 'Latitude for location verification',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @ApiProperty({
+    description: 'Longitude for location verification',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  long?: number;
+}
+
+export class CheckInTeachingScheduleDto {
+  @ApiProperty({
+    description: 'Latitude for location verification (must be within 100m of court)',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  lat: number;
+
+  @ApiProperty({
+    description: 'Longitude for location verification (must be within 100m of court)',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  long: number;
+}
+
+export class CheckOutTeachingScheduleDto {
+  @ApiProperty({
+    description: 'Latitude for location verification (must be within 100m of court)',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  lat: number;
+
+  @ApiProperty({
+    description: 'Longitude for location verification (must be within 100m of court)',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  long: number;
 }
 

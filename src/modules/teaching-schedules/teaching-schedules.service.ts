@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
+import { COURT_LOCATIONS } from 'src/constants/court-locations';
 import { TEACHING_SCHEDULE_STATUS } from 'src/constants/teaching-schedule-status';
 import { Repository } from 'typeorm';
 import { CourseStaffEntity } from '../course-staff/entities/course-staff.entity';
@@ -52,11 +53,155 @@ export class TeachingSchedulesService {
   async updateStatus(
     id: number,
     status: string,
+    lat?: number,
+    long?: number,
   ): Promise<TeachingScheduleEntity | null> {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
+
+    // Check location if lat/long provided
+    if (lat !== undefined && long !== undefined) {
+      await this.validateLocation(entity.course_id, lat, long);
+    }
+
     entity.status = status;
     return this.scheduleRepo.save(entity);
+  }
+
+  /**
+   * Check-in with mandatory location verification
+   * Automatically sets status to CHECKED_IN
+   * User can only check-in once
+   */
+  async checkIn(
+    id: number,
+    lat: number,
+    long: number,
+  ): Promise<TeachingScheduleEntity | null> {
+    const entity = await this.scheduleRepo.findOne({ where: { id } });
+    if (!entity) return null;
+
+    // Check if already checked in
+    if (
+      entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_IN ||
+      entity.checkin_time
+    ) {
+      throw new BadRequestException(
+        'You have already checked in for this teaching schedule.',
+      );
+    }
+
+    // Location verification is mandatory for check-in
+    await this.validateLocation(entity.course_id, lat, long);
+
+    // Automatically set status to CHECKED_IN
+    entity.status = TEACHING_SCHEDULE_STATUS.CHECKED_IN;
+    entity.checkin_time = new Date(); // Set check-in time
+    return this.scheduleRepo.save(entity);
+  }
+
+  /**
+   * Check-out with mandatory location verification
+   * Updates status to CHECKED_OUT
+   * User can only check-out once and must have checked in first
+   */
+  async checkOut(
+    id: number,
+    lat: number,
+    long: number,
+  ): Promise<TeachingScheduleEntity | null> {
+    const entity = await this.scheduleRepo.findOne({ where: { id } });
+    if (!entity) return null;
+
+    // Check if already checked out
+    if (
+      entity.status === TEACHING_SCHEDULE_STATUS.CHECKED_OUT ||
+      entity.checkout_time
+    ) {
+      throw new BadRequestException(
+        'You have already checked out for this teaching schedule.',
+      );
+    }
+
+    // Check if user has checked in first
+    if (
+      entity.status !== TEACHING_SCHEDULE_STATUS.CHECKED_IN &&
+      !entity.checkin_time
+    ) {
+      throw new BadRequestException(
+        'You must check in before checking out.',
+      );
+    }
+
+    // Location verification is mandatory for check-out
+    await this.validateLocation(entity.course_id, lat, long);
+
+    // Update status to CHECKED_OUT and set check-out time
+    entity.status = TEACHING_SCHEDULE_STATUS.CHECKED_OUT;
+    entity.checkout_time = new Date(); // Set check-out time
+    return this.scheduleRepo.save(entity);
+  }
+
+  /**
+   * Validate location against court location
+   * @throws BadRequestException if distance > 100m
+   */
+  private async validateLocation(
+    courseId: number,
+    lat: number,
+    long: number,
+  ): Promise<void> {
+    // Get course to find court_id
+    const course = await this.courseRepo.findOne({
+      where: { id: courseId },
+    });
+
+    if (course && course.court_id) {
+      const courtLocation = COURT_LOCATIONS[course.court_id];
+      if (courtLocation) {
+        const [courtLat, courtLong] = courtLocation;
+        const distance = this.calculateDistance(lat, long, courtLat, courtLong);
+
+        if (distance > 100) {
+          throw new BadRequestException(
+            `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
+              `Required distance: within 100m. ` +
+              `Court location: ${courtLat}, ${courtLong}`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Calculate distance between two coordinates using Haversine formula
+   * Returns distance in meters
+   */
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371000; // Earth radius in meters
+    const dLat = this.toRadians(lat2 - lat1);
+    const dLon = this.toRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(lat1)) *
+      Math.cos(this.toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance;
+  }
+
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 
   async delete(id: number): Promise<boolean> {

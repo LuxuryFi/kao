@@ -2,8 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CourseEntity } from '../courses/entities/course.entity';
-import { CourseStaffEntity } from './entities/course-staff.entity';
 import { SearchCourseStaffDto } from './dto/course-staff.dto';
+import { CourseStaffEntity } from './entities/course-staff.entity';
 
 interface ParsedSchedule {
   day: number[];
@@ -18,7 +18,7 @@ export class CourseStaffService {
     private readonly courseStaffRepo: Repository<CourseStaffEntity>,
     @InjectRepository(CourseEntity)
     private readonly courseRepo: Repository<CourseEntity>,
-  ) {}
+  ) { }
 
   async create(data: Partial<CourseStaffEntity>): Promise<CourseStaffEntity> {
     // Check for schedule conflicts before creating
@@ -138,8 +138,8 @@ export class CourseStaffService {
       if (timeConflict) {
         throw new BadRequestException(
           `Schedule conflict: User is already assigned to course "${existingCourse.course_name}" ` +
-            `at the same time (${this.formatSchedule(existingSchedule)}). ` +
-            `New course schedule: ${this.formatSchedule(newSchedule)}`,
+          `at the same time (${this.formatSchedule(existingSchedule)}). ` +
+          `New course schedule: ${this.formatSchedule(newSchedule)}`,
         );
       }
     }

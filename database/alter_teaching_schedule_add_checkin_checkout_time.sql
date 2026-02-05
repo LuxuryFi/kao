@@ -5,3 +5,4 @@ ADD COLUMN `checkout_time` DATETIME NULL AFTER `checkin_time`;
 
 
 
+

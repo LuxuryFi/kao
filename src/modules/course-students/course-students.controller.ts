@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -73,6 +74,15 @@ export class CourseStudentsController {
       const result = await this.courseStudentsService.store(payload);
       return sendResponse(res, HttpStatusCodes.CREATED, result, null);
     } catch (err) {
+      // Handle BadRequestException (400) separately
+      if (err instanceof BadRequestException) {
+        return sendResponse(
+          res,
+          HttpStatusCodes.BAD_REQUEST,
+          null,
+          err.message,
+        );
+      }
       return sendResponse(
         res,
         HttpStatusCodes.INTERNAL_SERVER_ERROR,

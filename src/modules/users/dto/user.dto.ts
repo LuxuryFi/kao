@@ -5,17 +5,24 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 import { CONTACT_STATUS } from 'src/constants/contact-status';
 import { ALLOWED_ROLES } from 'src/constants/roles';
 
 export class CreateUserDto {
-  @ApiProperty({ required: false, description: 'Username (required for all roles except customer)' })
+  @ApiProperty({
+    required: false,
+    description: 'Username (required for all roles except customer)',
+  })
   @IsOptional()
   @IsString()
   username?: string;
 
-  @ApiProperty({ required: false, description: 'Password (required for all roles except customer)' })
+  @ApiProperty({
+    required: false,
+    description: 'Password (required for all roles except customer)',
+  })
   @IsOptional()
   @IsString()
   password?: string;
@@ -27,10 +34,15 @@ export class CreateUserDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @ValidateIf(
+    (o) => o.email !== '' && o.email !== null && o.email !== undefined,
+  )
   @IsEmail()
   email?: string;
 
-  @ApiProperty({ description: 'Name (required for customer role, optional for others)' })
+  @ApiProperty({
+    description: 'Name (required for customer role, optional for others)',
+  })
   @IsString()
   name: string;
 
@@ -104,6 +116,9 @@ export class UpdateUserDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @ValidateIf(
+    (o) => o.email !== '' && o.email !== null && o.email !== undefined,
+  )
   @IsEmail()
   email?: string;
 

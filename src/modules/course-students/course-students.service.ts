@@ -1,10 +1,16 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IConfig } from 'config';
 import { BaseService } from 'src/base/base.service';
 import { Repository } from 'typeorm';
 import { CONFIG } from '../config/config.provider';
 import { AttendancesService } from '../attendances/attendances.service';
+import { CourseEntity } from '../courses/entities/course.entity';
 import { StudentEntity } from '../students/entities/student.entity';
 import { CourseStudentEntity } from './entities/course-student.entity';
 
@@ -15,6 +21,8 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     private readonly courseStudentsRepository: Repository<CourseStudentEntity>,
     @InjectRepository(StudentEntity)
     private readonly studentRepository: Repository<StudentEntity>,
+    @InjectRepository(CourseEntity)
+    private readonly courseRepository: Repository<CourseEntity>,
     @Inject(CONFIG) private readonly configService: IConfig,
     @Inject(forwardRef(() => AttendancesService))
     private readonly attendancesService: AttendancesService,
@@ -36,8 +44,15 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     skip?: number;
     select?: number;
   }): Promise<[CourseStudentEntity[], number]> {
-    const { student_id, course_id, status, skip = 0, select = 20 } = params || ({} as any);
-    const qb = this.courseStudentsRepository.createQueryBuilder('course_student');
+    const {
+      student_id,
+      course_id,
+      status,
+      skip = 0,
+      select = 20,
+    } = params || ({} as any);
+    const qb =
+      this.courseStudentsRepository.createQueryBuilder('course_student');
 
     if (student_id !== undefined && student_id !== null) {
       qb.andWhere('course_student.student_id = :student_id', { student_id });
@@ -60,7 +75,11 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     // Get courses with details for a student
     const result = await this.courseStudentsRepository
       .createQueryBuilder('course_student')
-      .leftJoinAndSelect('course', 'course', 'course.id = course_student.course_id')
+      .leftJoinAndSelect(
+        'course',
+        'course',
+        'course.id = course_student.course_id',
+      )
       .where('course_student.student_id = :studentId', { studentId })
       .select([
         'course_student.id as id',
@@ -86,7 +105,11 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
     // Get students with student details for a course
     const result = await this.courseStudentsRepository
       .createQueryBuilder('course_student')
-      .leftJoinAndSelect('student', 'student', 'student.id = course_student.student_id')
+      .leftJoinAndSelect(
+        'student',
+        'student',
+        'student.id = course_student.student_id',
+      )
       .where('course_student.course_id = :courseId', { courseId })
       .select([
         'course_student.id as id',
@@ -108,16 +131,49 @@ export class CourseStudentsService extends BaseService<CourseStudentEntity> {
   }
 
   async store(data: any): Promise<CourseStudentEntity> {
+    // Validate student_id exists
+    if (data.student_id) {
+      const student = await this.studentRepository.findOne({
+        where: { id: data.student_id },
+      });
+      if (!student) {
+        throw new BadRequestException(
+          `Student với ID ${data.student_id} không tồn tại`,
+        );
+      }
+    }
+
+    // Validate course_id exists
+    if (data.course_id) {
+      const course = await this.courseRepository.findOne({
+        where: { id: data.course_id },
+      });
+      if (!course) {
+        throw new BadRequestException(
+          `Course với ID ${data.course_id} không tồn tại`,
+        );
+      }
+    }
+
     const result = await this.courseStudentsRepository.save(data);
 
     // Tự động tạo attendance nếu student đã có subscription
     if (result && result.student_id && result.status !== false) {
       try {
-        console.log(`[CourseStudentsService] Triggering auto-create attendances for student ${result.student_id}`);
-        const attendances = await this.attendancesService.autoCreateAttendances(result.student_id);
-        console.log(`[CourseStudentsService] Created ${attendances.length} attendances for student ${result.student_id}`);
+        console.log(
+          `[CourseStudentsService] Triggering auto-create attendances for student ${result.student_id}`,
+        );
+        const attendances = await this.attendancesService.autoCreateAttendances(
+          result.student_id,
+        );
+        console.log(
+          `[CourseStudentsService] Created ${attendances.length} attendances for student ${result.student_id}`,
+        );
       } catch (error) {
-        console.error('[CourseStudentsService] Error auto-creating attendances:', error);
+        console.error(
+          '[CourseStudentsService] Error auto-creating attendances:',
+          error,
+        );
         // Không throw error để không ảnh hưởng đến việc tạo course_student
       }
     }

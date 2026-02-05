@@ -21,7 +21,10 @@ export class UpdateCourseStudentDto {
   @IsNumber()
   id: number;
 
-  @ApiProperty({ description: 'Student ID (references student.id)', required: false })
+  @ApiProperty({
+    description: 'Student ID (references student.id)',
+    required: false,
+  })
   @IsNumber()
   @IsOptional()
   student_id?: number;
@@ -42,4 +45,3 @@ export class DeleteCourseStudentDto {
   @IsNumber()
   id: number;
 }
-

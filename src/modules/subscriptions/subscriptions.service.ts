@@ -1,4 +1,9 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PackageEntity } from '../packages/entities/package.entity';
@@ -25,6 +30,30 @@ export class SubscriptionsService {
   ) {}
 
   async create(data: CreateSubscriptionDto) {
+    // Validate student_id exists
+    if (data.student_id) {
+      const student = await this.studentRepo.findOne({
+        where: { id: data.student_id },
+      });
+      if (!student) {
+        throw new BadRequestException(
+          `Student với ID ${data.student_id} không tồn tại`,
+        );
+      }
+    }
+
+    // Validate package_id exists
+    if (data.package_id) {
+      const pkg = await this.packageRepo.findOne({
+        where: { package_id: data.package_id },
+      });
+      if (!pkg) {
+        throw new BadRequestException(
+          `Package với ID ${data.package_id} không tồn tại`,
+        );
+      }
+    }
+
     const created_at = Math.floor(Date.now() / 1000);
     const entity = this.subscriptionRepo.create({
       ...data,
@@ -36,11 +65,20 @@ export class SubscriptionsService {
     // Tự động tạo attendance nếu student đã có course active
     if (result && result.student_id) {
       try {
-        console.log(`[SubscriptionsService] Triggering auto-create attendances for student ${result.student_id}`);
-        const attendances = await this.attendancesService.autoCreateAttendances(result.student_id);
-        console.log(`[SubscriptionsService] Created ${attendances.length} attendances for student ${result.student_id}`);
+        console.log(
+          `[SubscriptionsService] Triggering auto-create attendances for student ${result.student_id}`,
+        );
+        const attendances = await this.attendancesService.autoCreateAttendances(
+          result.student_id,
+        );
+        console.log(
+          `[SubscriptionsService] Created ${attendances.length} attendances for student ${result.student_id}`,
+        );
       } catch (error) {
-        console.error('[SubscriptionsService] Error auto-creating attendances:', error);
+        console.error(
+          '[SubscriptionsService] Error auto-creating attendances:',
+          error,
+        );
         console.error('[SubscriptionsService] Error stack:', error.stack);
         // Không throw error để không ảnh hưởng đến việc tạo subscription
       }
@@ -95,7 +133,11 @@ export class SubscriptionsService {
               where: { package_id: s.package_id },
             })
           : null;
-        return { ...s, student_name: '', package_name: pkg?.package_name || '' };
+        return {
+          ...s,
+          student_name: '',
+          package_name: pkg?.package_name || '',
+        };
       }),
     );
   }

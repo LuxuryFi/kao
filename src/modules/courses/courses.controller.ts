@@ -11,7 +11,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { HttpStatusCodes } from 'src/constants/common';
 import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
@@ -31,13 +36,17 @@ export class CoursesController {
   constructor(
     private readonly coursesService: CoursesService,
     private readonly courseStaffService: CourseStaffService,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Course' })
-  async create(@Body() data: CreateCourseDto, @Res() res: Response, @Req() req: any) {
+  async create(
+    @Body() data: CreateCourseDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
     try {
       // Check schedule conflict if lead_id is provided
       if (data.lead_id) {
@@ -71,7 +80,10 @@ export class CoursesController {
       // Check schedule conflict after creation (if lead_id exists)
       if (data.lead_id) {
         try {
-          await this.courseStaffService.checkScheduleConflict(data.lead_id, result.id);
+          await this.courseStaffService.checkScheduleConflict(
+            data.lead_id,
+            result.id,
+          );
         } catch (conflictError) {
           // Rollback: delete the course if conflict detected
           await this.coursesService.delete(result.id);
@@ -132,21 +144,27 @@ export class CoursesController {
     @Query('select') select?: string,
   ) {
     try {
-      const [result, totalCount] = await this.coursesService.findFilteredPaginated({
-        keyword,
-        status,
-        court_id: court_id ? Number(court_id) : undefined,
-        staff_id: staff_id ? Number(staff_id) : undefined,
-        skip: skip ? Number(skip) : 0,
-        select: select ? Number(select) : 20,
-      });
+      const [result, totalCount] =
+        await this.coursesService.findFilteredPaginated({
+          keyword,
+          status,
+          court_id: court_id ? Number(court_id) : undefined,
+          staff_id: staff_id ? Number(staff_id) : undefined,
+          skip: skip ? Number(skip) : 0,
+          select: select ? Number(select) : 20,
+        });
       const courseIds = result.map((c) => c.id);
       const staffByCourse = await this.loadStaffMap(courseIds);
       const mapped = result.map((c) => ({
         ...c,
         staff: staffByCourse.get(c.id) || [],
       }));
-      return sendResponse(res, HttpStatusCodes.OK, { result: mapped, totalCount }, null);
+      return sendResponse(
+        res,
+        HttpStatusCodes.OK,
+        { result: mapped, totalCount },
+        null,
+      );
     } catch (err) {
       return sendResponse(
         res,
@@ -172,7 +190,9 @@ export class CoursesController {
           'Course not found',
         );
       }
-      const staff = await this.courseStaffService.search({ course_id: result.id });
+      const staff = await this.courseStaffService.search({
+        course_id: result.id,
+      });
       return sendResponse(
         res,
         HttpStatusCodes.OK,
@@ -196,7 +216,11 @@ export class CoursesController {
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update Course' })
-  async update(@Body() data: UpdateCourseDto, @Res() res: Response, @Req() req: any) {
+  async update(
+    @Body() data: UpdateCourseDto,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
     try {
       const { course_id, lead_id, ...rest } = data as any;
       const updatedBy = req.user?.username || 'system';
@@ -208,11 +232,18 @@ export class CoursesController {
         });
         // Only check if lead_id is actually changing
         if (existing && existing.lead_id !== lead_id) {
-          await this.courseStaffService.checkScheduleConflict(lead_id, course_id);
+          await this.courseStaffService.checkScheduleConflict(
+            lead_id,
+            course_id,
+          );
         }
       }
 
-      await this.coursesService.update(course_id, { ...rest, lead_id, updated_by: updatedBy });
+      await this.coursesService.update(course_id, {
+        ...rest,
+        lead_id,
+        updated_by: updatedBy,
+      });
       const updated = await this.coursesService.findOne({
         where: { id: course_id },
       });

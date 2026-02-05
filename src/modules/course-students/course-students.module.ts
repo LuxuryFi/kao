@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '../config/config.module';
 import { AttendancesModule } from '../attendances/attendances.module';
+import { CourseEntity } from '../courses/entities/course.entity';
 import { StudentEntity } from '../students/entities/student.entity';
 import { CourseStudentsController } from './course-students.controller';
 import { CourseStudentsService } from './course-students.service';
@@ -9,7 +10,11 @@ import { CourseStudentEntity } from './entities/course-student.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CourseStudentEntity, StudentEntity]),
+    TypeOrmModule.forFeature([
+      CourseStudentEntity,
+      StudentEntity,
+      CourseEntity,
+    ]),
     ConfigModule,
     AttendancesModule,
   ],

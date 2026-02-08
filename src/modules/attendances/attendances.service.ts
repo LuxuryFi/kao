@@ -45,7 +45,7 @@ export class AttendancesService {
     private readonly studentRepo: Repository<StudentEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   /**
    * Tạo attendance tự động khi student có cả course active và subscription
@@ -138,15 +138,26 @@ export class AttendancesService {
 
     // 7. Tính toán ngày học dựa trên start_date
     const startDate = new Date(subscription.start_date * 1000); // Convert UNIX timestamp to Date
-    const startDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    // Convert to our format: 1 = Monday, 2 = Tuesday, ..., 7 = Sunday
-    const startDay = startDayOfWeek === 0 ? 7 : startDayOfWeek;
+    const startDayOfWeek = startDate.getDay(); // JavaScript: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    // Convert to our format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+    // This matches the day format in course schedule: day = 1 means Sunday, day = 7 means Saturday
+    const startDay = startDayOfWeek + 1; // 0 (Sunday) -> 1, 1 (Monday) -> 2, ..., 6 (Saturday) -> 7
 
     // 8. Tạo attendance records
     const attendances: AttendanceEntity[] = [];
     let sessionCount = 0;
     const totalSessions = pkg.quantity;
     let weekOffset = 0;
+
+    // Pre-fetch all existing attendances for this student to avoid duplicate queries
+    const existingAttendances = await this.attendanceRepo.find({
+      where: { student_id: studentId },
+    });
+    const existingMap = new Map<string, AttendanceEntity>();
+    for (const existing of existingAttendances) {
+      const key = `${existing.student_id}-${existing.course_id}-${existing.date}-${existing.time}`;
+      existingMap.set(key, existing);
+    }
 
     while (sessionCount < totalSessions) {
       for (const item of scheduleItems) {
@@ -155,6 +166,7 @@ export class AttendancesService {
         }
 
         // Tính toán ngày học
+        // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
         let targetDate: Date;
         if (weekOffset === 0) {
           // Tuần đầu tiên: chỉ tạo từ start_day trở đi
@@ -167,30 +179,28 @@ export class AttendancesService {
         } else {
           // Các tuần tiếp theo: tạo đủ tất cả các ngày
           // Tính số ngày từ start_date đến ngày học trong tuần hiện tại
-          // Công thức: (weekOffset * 7) + (item.day - startDay)
-          // Nếu item.day < startDay, nghĩa là ngày học đã qua trong tuần hiện tại
-          // nên cần cộng thêm 7 ngày để đến tuần sau
+          // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
           let daysToAdd: number;
           if (item.day >= startDay) {
+            // item.day >= startDay: ngày học chưa qua trong tuần hiện tại
+            // Ví dụ: startDay = 1 (Sunday), item.day = 2 (Monday), weekOffset = 1
+            // daysToAdd = 1*7 + (2-1) = 8 -> Monday tuần sau ✓
             daysToAdd = weekOffset * 7 + (item.day - startDay);
           } else {
-            // item.day < startDay: ngày học đã qua, cần đến tuần sau
-            daysToAdd = (weekOffset - 1) * 7 + (7 - startDay + item.day);
+            // item.day < startDay: ngày học đã qua trong tuần hiện tại, cần đến tuần sau
+            // Ví dụ: startDay = 2 (Monday), item.day = 1 (Sunday), weekOffset = 1
+            // Cần đến Sunday tuần sau = 1 tuần + 6 ngày từ Monday = 13 ngày
+            // daysToAdd = 1*7 + (7-2+1) = 7 + 6 = 13 ✓
+            daysToAdd = weekOffset * 7 + (7 - startDay + item.day);
           }
           targetDate = new Date(startDate);
           targetDate.setDate(targetDate.getDate() + daysToAdd);
         }
 
-        // Kiểm tra xem attendance đã tồn tại chưa
+        // Kiểm tra xem attendance đã tồn tại chưa (check trong map để tránh duplicate)
         const dateStr = targetDate.toISOString().split('T')[0];
-        const existingAttendance = await this.attendanceRepo.findOne({
-          where: {
-            student_id: studentId,
-            course_id: item.course_id,
-            date: dateStr,
-            time: item.hour,
-          },
-        });
+        const key = `${studentId}-${item.course_id}-${dateStr}-${item.hour}`;
+        const existingAttendance = existingMap.get(key);
 
         if (!existingAttendance) {
           const attendance = this.attendanceRepo.create({
@@ -202,6 +212,8 @@ export class AttendancesService {
             is_trial: false, // Auto-created attendances are not trial
           });
           attendances.push(attendance);
+          // Add to map to prevent duplicates in the same batch
+          existingMap.set(key, attendance);
           sessionCount++;
         } else {
           // Nếu đã tồn tại, vẫn tính vào số lượng buổi học

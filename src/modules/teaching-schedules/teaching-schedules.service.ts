@@ -29,7 +29,7 @@ export class TeachingSchedulesService {
     private readonly courseRepo: Repository<CourseEntity>,
     @InjectRepository(CourseStaffEntity)
     private readonly courseStaffRepo: Repository<CourseStaffEntity>,
-  ) { }
+  ) {}
 
   async create(
     dto: CreateTeachingScheduleDto,
@@ -281,8 +281,8 @@ export class TeachingSchedulesService {
       if (distance > 150) {
         throw new BadRequestException(
           `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
-          `Required distance: within 150m. ` +
-          `Court location: ${courtLat}, ${courtLong}`,
+            `Required distance: within 150m. ` +
+            `Court location: ${courtLat}, ${courtLong}`,
         );
       }
     } else {
@@ -310,9 +310,9 @@ export class TeachingSchedulesService {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRadians(lat1)) *
-      Math.cos(this.toRadians(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
@@ -365,7 +365,7 @@ export class TeachingSchedulesService {
         : { where: { status: true } },
     );
 
-    const weekStart = this.getNextWeekMonday();
+    const weekStart = this.getNextWeekSunday();
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
@@ -398,18 +398,16 @@ export class TeachingSchedulesService {
 
       if (staffList.length === 0) continue;
 
-      // Get existing schedules for this course in the target week
-      const existingSchedules = await this.scheduleRepo.find({
-        where: {
-          course_id: course.id,
-        },
-      });
-
-      // Filter to only schedules in the target week
-      const existingInWeek = existingSchedules.filter((s) => {
-        const scheduleDate = new Date(s.date);
-        return scheduleDate >= weekStart && scheduleDate <= weekEnd;
-      });
+      // Get existing schedules for this course in the target week only
+      // Query directly by date range to avoid fetching all schedules
+      const weekStartStr = this.toDateStr(weekStart);
+      const weekEndStr = this.toDateStr(weekEnd);
+      const existingInWeek = await this.scheduleRepo
+        .createQueryBuilder('ts')
+        .where('ts.course_id = :course_id', { course_id: course.id })
+        .andWhere('ts.date >= :weekStart', { weekStart: weekStartStr })
+        .andWhere('ts.date <= :weekEnd', { weekEnd: weekEndStr })
+        .getMany();
 
       // Create a map of existing schedules: key = "course_id-date-time-user_id"
       const existingMap = new Map<string, TeachingScheduleEntity>();
@@ -428,6 +426,15 @@ export class TeachingSchedulesService {
 
       for (const d of parsed.day) {
         const targetDate = new Date(weekStart);
+        // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+        // weekStart is Sunday (day 1), so:
+        // day 1 (Sunday) = weekStart + 0 days
+        // day 2 (Monday) = weekStart + 1 day
+        // day 3 (Tuesday) = weekStart + 2 days
+        // day 4 (Wednesday) = weekStart + 3 days
+        // day 5 (Thursday) = weekStart + 4 days
+        // day 6 (Friday) = weekStart + 5 days
+        // day 7 (Saturday) = weekStart + 6 days
         targetDate.setDate(weekStart.getDate() + (d - 1));
         const dateStr = this.toDateStr(targetDate);
         for (const s of staffList) {
@@ -498,15 +505,19 @@ export class TeachingSchedulesService {
     }
   }
 
-  private getNextWeekMonday(): Date {
+  private getNextWeekSunday(): Date {
     const today = new Date();
     const day = today.getDay(); // 0 Sunday ... 6 Saturday
-    let delta = (8 - day) % 7;
-    if (delta === 0) delta = 7;
-    const nextMonday = new Date(today);
-    nextMonday.setDate(today.getDate() + delta);
-    nextMonday.setHours(0, 0, 0, 0);
-    return nextMonday;
+    // Calculate days until next Sunday
+    // If today is Sunday (0), we want next Sunday (7 days)
+    // If today is Monday (1), we want next Sunday (6 days)
+    // If today is Saturday (6), we want next Sunday (1 day)
+    let delta = (7 - day) % 7;
+    if (delta === 0) delta = 7; // If today is Sunday, get next Sunday
+    const nextSunday = new Date(today);
+    nextSunday.setDate(today.getDate() + delta);
+    nextSunday.setHours(0, 0, 0, 0);
+    return nextSunday;
   }
 
   private toDateStr(d: Date): string {

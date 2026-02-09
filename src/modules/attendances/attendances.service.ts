@@ -115,6 +115,9 @@ export class AttendancesService {
       try {
         const schedule: Schedule = JSON.parse(course.schedule);
         if (schedule.day && Array.isArray(schedule.day) && schedule.hour) {
+          console.log(
+            `[AttendancesService] Course ${course.id} schedule: day=${JSON.stringify(schedule.day)}, hour=${schedule.hour}`,
+          );
           for (const day of schedule.day) {
             scheduleItems.push({
               day,
@@ -127,6 +130,9 @@ export class AttendancesService {
         console.error(`Error parsing schedule for course ${course.id}:`, error);
       }
     }
+    console.log(
+      `[AttendancesService] Total schedule items: ${scheduleItems.length}`,
+    );
 
     // 6. Sắp xếp schedule items theo day và hour
     scheduleItems.sort((a, b) => {
@@ -138,10 +144,6 @@ export class AttendancesService {
 
     // 7. Tính toán ngày học dựa trên start_date
     const startDate = new Date(subscription.start_date * 1000); // Convert UNIX timestamp to Date
-    const startDayOfWeek = startDate.getDay(); // JavaScript: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    // Convert to our format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
-    // This matches the day format in course schedule: day = 1 means Sunday, day = 7 means Saturday
-    const startDay = startDayOfWeek + 1; // 0 (Sunday) -> 1, 1 (Monday) -> 2, ..., 6 (Saturday) -> 7
 
     // 8. Tạo attendance records
     const attendances: AttendanceEntity[] = [];
@@ -159,7 +161,22 @@ export class AttendancesService {
       existingMap.set(key, existing);
     }
 
+    // Tính Chủ nhật của tuần chứa startDate một lần (trước vòng lặp)
+    const startDateDayOfWeek = startDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    const daysFromSunday = startDateDayOfWeek === 0 ? 0 : startDateDayOfWeek;
+    const firstWeekSunday = new Date(startDate);
+    firstWeekSunday.setDate(startDate.getDate() - daysFromSunday);
+    firstWeekSunday.setHours(0, 0, 0, 0);
+
+    const startDateOnly = new Date(startDate);
+    startDateOnly.setHours(0, 0, 0, 0);
+
     while (sessionCount < totalSessions) {
+      // Tính Chủ nhật của tuần hiện tại (weekOffset) - tính một lần cho mỗi tuần
+      const currentWeekSunday = new Date(firstWeekSunday);
+      currentWeekSunday.setDate(firstWeekSunday.getDate() + weekOffset * 7);
+      currentWeekSunday.setHours(0, 0, 0, 0);
+
       for (const item of scheduleItems) {
         if (sessionCount >= totalSessions) {
           break;
@@ -167,60 +184,30 @@ export class AttendancesService {
 
         // Tính toán ngày học
         // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
-        let targetDate: Date;
-        if (weekOffset === 0) {
-          // Tuần đầu tiên: tính ngày trong tuần hiện tại (từ Chủ nhật của tuần đó)
-          // Tìm Chủ nhật của tuần chứa startDate
-          const startDateDayOfWeek = startDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-          const daysFromSunday =
-            startDateDayOfWeek === 0 ? 0 : startDateDayOfWeek;
-          const weekSunday = new Date(startDate);
-          weekSunday.setDate(startDate.getDate() - daysFromSunday);
-          weekSunday.setHours(0, 0, 0, 0);
+        // Tính ngày học từ Chủ nhật của tuần hiện tại: day 1 (Sunday) = +0, day 2 (Monday) = +1, ...
+        const targetDate = new Date(currentWeekSunday);
+        targetDate.setDate(currentWeekSunday.getDate() + (item.day - 1));
+        targetDate.setHours(0, 0, 0, 0);
 
-          // Tính ngày học: từ Chủ nhật của tuần + (day - 1)
-          // day 1 (Sunday) = weekSunday + 0
-          // day 2 (Monday) = weekSunday + 1
-          // ...
-          targetDate = new Date(weekSunday);
-          targetDate.setDate(weekSunday.getDate() + (item.day - 1));
-
-          // Chỉ tạo nếu ngày học >= startDate (không tạo các ngày trong quá khứ)
-          // So sánh chỉ theo ngày, không theo giờ
-          const startDateOnly = new Date(startDate);
-          startDateOnly.setHours(0, 0, 0, 0);
-          const targetDateOnly = new Date(targetDate);
-          targetDateOnly.setHours(0, 0, 0, 0);
-          if (targetDateOnly < startDateOnly) {
-            continue;
-          }
-        } else {
-          // Các tuần tiếp theo: tạo đủ tất cả các ngày
-          // Tính số ngày từ start_date đến ngày học trong tuần hiện tại
-          // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
-          let daysToAdd: number;
-          if (item.day >= startDay) {
-            // item.day >= startDay: ngày học chưa qua trong tuần hiện tại
-            // Ví dụ: startDay = 1 (Sunday), item.day = 2 (Monday), weekOffset = 1
-            // daysToAdd = 1*7 + (2-1) = 8 -> Monday tuần sau ✓
-            daysToAdd = weekOffset * 7 + (item.day - startDay);
-          } else {
-            // item.day < startDay: ngày học đã qua trong tuần hiện tại, cần đến tuần sau
-            // Ví dụ: startDay = 2 (Monday), item.day = 1 (Sunday), weekOffset = 1
-            // Cần đến Sunday tuần sau = 1 tuần + 6 ngày từ Monday = 13 ngày
-            // daysToAdd = 1*7 + (7-2+1) = 7 + 6 = 13 ✓
-            daysToAdd = weekOffset * 7 + (7 - startDay + item.day);
-          }
-          targetDate = new Date(startDate);
-          targetDate.setDate(targetDate.getDate() + daysToAdd);
+        // Chỉ tạo nếu ngày học >= startDate (không tạo các ngày trong quá khứ)
+        if (targetDate < startDateOnly) {
+          console.log(
+            `[AttendancesService] Skipping: targetDate ${targetDate.toISOString().split('T')[0]} < startDate ${startDateOnly.toISOString().split('T')[0]}`,
+          );
+          continue;
         }
 
-        // Kiểm tra xem attendance đã tồn tại chưa (check trong map để tránh duplicate)
         // Format date as YYYY-MM-DD in local time (tránh lệch ngày do toISOString/UTC)
         const year = targetDate.getFullYear();
         const month = (targetDate.getMonth() + 1).toString().padStart(2, '0');
-        const day = targetDate.getDate().toString().padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
+        const dayStr = targetDate.getDate().toString().padStart(2, '0');
+        const dateStr = `${year}-${month}-${dayStr}`;
+
+        console.log(
+          `[AttendancesService] Processing: course_id=${item.course_id}, schedule_day=${item.day}, targetDate=${dateStr}, weekOffset=${weekOffset}`,
+        );
+
+        // Kiểm tra xem attendance đã tồn tại chưa (check trong map để tránh duplicate)
         const key = `${studentId}-${item.course_id}-${dateStr}-${item.hour}`;
         const existingAttendance = existingMap.get(key);
 

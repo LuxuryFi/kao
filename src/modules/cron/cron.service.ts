@@ -10,7 +10,7 @@ export class CronJobsService {
   constructor(
     private readonly teachingSchedulesService: TeachingSchedulesService,
     private readonly attendancesService: AttendancesService,
-  ) {}
+  ) { }
 
   /**
    * Weekly job: generate next-week teaching schedules.

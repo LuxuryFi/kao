@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { join } from 'path';
+import * as nodeCrypto from 'crypto';
 import { AppModule } from './modules/app/app.module';
 import { CONFIG, getHost } from './modules/config/config.provider';
 
@@ -16,6 +17,19 @@ const validationPipeOptions = {
   },
   whitelist: true,
 };
+
+// Polyfill global crypto for libraries (e.g. @nestjs/schedule) expecting crypto.randomUUID()
+// In Node.js, crypto is a module, not a global, so we expose the needed API here.
+if (!(global as any).crypto) {
+  (global as any).crypto = {
+    // Use Node's randomUUID if available, fallback to randomBytes-based implementation
+    randomUUID:
+      (nodeCrypto as any).randomUUID ||
+      (() => {
+        return nodeCrypto.randomBytes(16).toString('hex');
+      }),
+  };
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -39,7 +53,7 @@ async function bootstrap() {
     prefix: '/public',
     setHeaders: (res, path) => {
       res.set('Access-Control-Allow-Origin', '*'); // or restrict to your frontend origin
-    },                               
+    },
   });
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Food Store')

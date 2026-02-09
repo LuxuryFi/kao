@@ -521,6 +521,10 @@ export class TeachingSchedulesService {
   }
 
   private toDateStr(d: Date): string {
-    return d.toISOString().split('T')[0];
+    // Format date as YYYY-MM-DD in local time (avoid timezone shift from toISOString/UTC)
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

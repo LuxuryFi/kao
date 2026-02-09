@@ -169,13 +169,31 @@ export class AttendancesService {
         // day format: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
         let targetDate: Date;
         if (weekOffset === 0) {
-          // Tuần đầu tiên: chỉ tạo từ start_day trở đi
-          if (item.day < startDay) {
-            continue; // Bỏ qua các ngày trước start_day trong tuần đầu
+          // Tuần đầu tiên: tính ngày trong tuần hiện tại (từ Chủ nhật của tuần đó)
+          // Tìm Chủ nhật của tuần chứa startDate
+          const startDateDayOfWeek = startDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+          const daysFromSunday =
+            startDateDayOfWeek === 0 ? 0 : startDateDayOfWeek;
+          const weekSunday = new Date(startDate);
+          weekSunday.setDate(startDate.getDate() - daysFromSunday);
+          weekSunday.setHours(0, 0, 0, 0);
+
+          // Tính ngày học: từ Chủ nhật của tuần + (day - 1)
+          // day 1 (Sunday) = weekSunday + 0
+          // day 2 (Monday) = weekSunday + 1
+          // ...
+          targetDate = new Date(weekSunday);
+          targetDate.setDate(weekSunday.getDate() + (item.day - 1));
+
+          // Chỉ tạo nếu ngày học >= startDate (không tạo các ngày trong quá khứ)
+          // So sánh chỉ theo ngày, không theo giờ
+          const startDateOnly = new Date(startDate);
+          startDateOnly.setHours(0, 0, 0, 0);
+          const targetDateOnly = new Date(targetDate);
+          targetDateOnly.setHours(0, 0, 0, 0);
+          if (targetDateOnly < startDateOnly) {
+            continue;
           }
-          const daysToAdd = item.day - startDay;
-          targetDate = new Date(startDate);
-          targetDate.setDate(targetDate.getDate() + daysToAdd);
         } else {
           // Các tuần tiếp theo: tạo đủ tất cả các ngày
           // Tính số ngày từ start_date đến ngày học trong tuần hiện tại
@@ -198,7 +216,11 @@ export class AttendancesService {
         }
 
         // Kiểm tra xem attendance đã tồn tại chưa (check trong map để tránh duplicate)
-        const dateStr = targetDate.toISOString().split('T')[0];
+        // Format date as YYYY-MM-DD in local time (tránh lệch ngày do toISOString/UTC)
+        const year = targetDate.getFullYear();
+        const month = (targetDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = targetDate.getDate().toString().padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         const key = `${studentId}-${item.course_id}-${dateStr}-${item.hour}`;
         const existingAttendance = existingMap.get(key);
 

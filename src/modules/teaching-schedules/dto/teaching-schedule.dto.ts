@@ -145,7 +145,7 @@ export class UpdateTeachingScheduleStatusDto {
 export class CheckInTeachingScheduleDto {
   @ApiProperty({
     description:
-      'Latitude for location verification (must be within 150m of court)',
+      'Latitude for location verification (must be within 1km of court)',
     required: true,
   })
   @Type(() => Number)
@@ -154,7 +154,7 @@ export class CheckInTeachingScheduleDto {
 
   @ApiProperty({
     description:
-      'Longitude for location verification (must be within 150m of court)',
+      'Longitude for location verification (must be within 1km of court)',
     required: true,
   })
   @Type(() => Number)
@@ -165,7 +165,7 @@ export class CheckInTeachingScheduleDto {
 export class CheckOutTeachingScheduleDto {
   @ApiProperty({
     description:
-      'Latitude for location verification (must be within 150m of court)',
+      'Latitude for location verification (must be within 1km of court)',
     required: true,
   })
   @Type(() => Number)
@@ -174,7 +174,7 @@ export class CheckOutTeachingScheduleDto {
 
   @ApiProperty({
     description:
-      'Longitude for location verification (must be within 150m of court)',
+      'Longitude for location verification (must be within 1km of court)',
     required: true,
   })
   @Type(() => Number)

@@ -1,7 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
-import { COURT_LOCATIONS } from 'src/constants/court-locations';
+import {
+  COURT_LOCATIONS,
+  MAX_CHECKIN_DISTANCE,
+} from 'src/constants/court-locations';
 import { TEACHING_SCHEDULE_STATUS } from 'src/constants/teaching-schedule-status';
 import { Repository } from 'typeorm';
 import { CourseStaffEntity } from '../course-staff/entities/course-staff.entity';
@@ -29,7 +32,7 @@ export class TeachingSchedulesService {
     private readonly courseRepo: Repository<CourseEntity>,
     @InjectRepository(CourseStaffEntity)
     private readonly courseStaffRepo: Repository<CourseStaffEntity>,
-  ) {}
+  ) { }
 
   async create(
     dto: CreateTeachingScheduleDto,
@@ -250,7 +253,7 @@ export class TeachingSchedulesService {
 
   /**
    * Validate location against court location
-   * @throws BadRequestException if distance > 150m or court_id not configured
+   * @throws BadRequestException if distance > MAX_CHECKIN_DISTANCE (1km) or court_id not configured
    */
   private async validateLocation(
     courseId: number,
@@ -278,11 +281,11 @@ export class TeachingSchedulesService {
       const [courtLat, courtLong] = courtLocation;
       const distance = this.calculateDistance(lat, long, courtLat, courtLong);
 
-      if (distance > 150) {
+      if (distance > MAX_CHECKIN_DISTANCE) {
         throw new BadRequestException(
           `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
-            `Required distance: within 150m. ` +
-            `Court location: ${courtLat}, ${courtLong}`,
+          `Required distance: within ${MAX_CHECKIN_DISTANCE}m (1km). ` +
+          `Court location: ${courtLat}, ${courtLong}`,
         );
       }
     } else {
@@ -310,9 +313,9 @@ export class TeachingSchedulesService {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRadians(lat1)) *
-        Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(this.toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;

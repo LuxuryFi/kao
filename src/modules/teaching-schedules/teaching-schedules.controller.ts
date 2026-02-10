@@ -36,7 +36,7 @@ import { TeachingSchedulesService } from './teaching-schedules.service';
 export class TeachingSchedulesController {
   constructor(
     private readonly teachingSchedulesService: TeachingSchedulesService,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(AccessTokenGuard)
@@ -155,7 +155,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Update status of teaching schedule',
     description:
-      'Requires lat/long for location verification. Must be within 150m of the court location.',
+      'Requires lat/long for location verification. Must be within 1km of the court location.',
   })
   async updateStatus(
     @Param('id') id: number,
@@ -193,7 +193,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-in for teaching schedule',
     description:
-      'Requires lat/long for location verification (within 150m). Automatically sets status to CHECKED_IN or CHECKED_IN_LATE based on time window.',
+      'Requires lat/long for location verification (within 1km). Automatically sets status to CHECKED_IN or CHECKED_IN_LATE based on time window.',
   })
   async checkIn(
     @Param('id') id: number,
@@ -230,7 +230,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-out for teaching schedule',
     description:
-      'Requires lat/long for location verification (within 150m). Updates status to CHECKED_OUT or CHECKED_OUT_EARLY based on end time.',
+      'Requires lat/long for location verification (within 1km). Updates status to CHECKED_OUT or CHECKED_OUT_EARLY based on end time.',
   })
   async checkOut(
     @Param('id') id: number,

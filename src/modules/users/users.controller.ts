@@ -50,7 +50,7 @@ import { UsersService } from './users.service';
 export class UserController {
   constructor(private readonly usersService: UsersService) { }
   @Options('/upload')
-  handleOptions(@Req() req: Request, @Res() res: Response) {
+  handleOptions(@Res() res: Response) {
     // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader(

@@ -12,7 +12,7 @@ import {
   Res,
   UploadedFile,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -31,7 +31,12 @@ import { Errors } from 'src/constants/errors';
 import { ALLOWED_ROLES } from 'src/constants/roles';
 import { AccessTokenGuard } from 'src/guards/access-token.guard';
 import { sendResponse } from 'src/utils/response.util';
-import { AdminUpdatePasswordDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto } from './dto/user.dto';
+import {
+  AdminUpdatePasswordDto,
+  CreateUserDto,
+  UpdatePasswordDto,
+  UpdateUserDto,
+} from './dto/user.dto';
 import {
   CreateUserResponse,
   GetUserResponse,

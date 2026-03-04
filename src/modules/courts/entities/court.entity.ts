@@ -34,6 +34,24 @@ export class CourtEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 128 })
   district: string;
 
+  @ApiProperty({
+    type: Number,
+    description: 'Latitude of the court (in decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  lat?: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Longitude of the court (in decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  long?: number;
+
   @ApiProperty({ type: Number, description: 'UNIX timestamp (ms or sec)' })
   @IsOptional()
   @Column({ type: 'bigint', nullable: true })
@@ -56,5 +74,3 @@ export class CourtEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 256, nullable: true })
   updated_by?: string;
 }
-
-

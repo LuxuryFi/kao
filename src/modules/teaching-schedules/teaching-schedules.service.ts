@@ -1,14 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { COURSE_STAFF_ROLE } from 'src/constants/course-staff-role';
-import {
-  COURT_LOCATIONS,
-  MAX_CHECKIN_DISTANCE,
-} from 'src/constants/court-locations';
+import { MAX_CHECKIN_DISTANCE } from 'src/constants/court-locations';
 import { TEACHING_SCHEDULE_STATUS } from 'src/constants/teaching-schedule-status';
 import { Repository } from 'typeorm';
 import { CourseStaffEntity } from '../course-staff/entities/course-staff.entity';
 import { CourseEntity } from '../courses/entities/course.entity';
+import { CourtEntity } from '../courts/entities/court.entity';
 import {
   CreateTeachingScheduleDto,
   GenerateTeachingScheduleDto,
@@ -32,6 +30,8 @@ export class TeachingSchedulesService {
     private readonly courseRepo: Repository<CourseEntity>,
     @InjectRepository(CourseStaffEntity)
     private readonly courseStaffRepo: Repository<CourseStaffEntity>,
+    @InjectRepository(CourtEntity)
+    private readonly courtRepo: Repository<CourtEntity>,
   ) { }
 
   async create(
@@ -58,12 +58,13 @@ export class TeachingSchedulesService {
     status: string,
     lat?: number,
     long?: number,
+    bypass = false,
   ): Promise<TeachingScheduleEntity | null> {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
 
-    // Check location if lat/long provided
-    if (lat !== undefined && long !== undefined) {
+    // Check location if lat/long provided and not bypassed
+    if (!bypass && lat !== undefined && long !== undefined) {
       await this.validateLocation(entity.course_id, lat, long);
     }
 
@@ -78,8 +79,9 @@ export class TeachingSchedulesService {
    */
   async checkIn(
     id: number,
-    lat: number,
-    long: number,
+    lat: number | undefined,
+    long: number | undefined,
+    bypass = false,
   ): Promise<TeachingScheduleEntity | null> {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
@@ -103,8 +105,15 @@ export class TeachingSchedulesService {
       );
     }
 
-    // Location verification is mandatory for check-in
-    await this.validateLocation(entity.course_id, lat, long);
+    // Location verification (unless bypass is true)
+    if (!bypass) {
+      if (lat === undefined || long === undefined) {
+        throw new BadRequestException(
+          'Latitude and longitude are required for check-in unless bypass is true.',
+        );
+      }
+      await this.validateLocation(entity.course_id, lat, long);
+    }
 
     const course = await this.courseRepo.findOne({
       where: { id: entity.course_id },
@@ -146,8 +155,9 @@ export class TeachingSchedulesService {
    */
   async checkOut(
     id: number,
-    lat: number,
-    long: number,
+    lat: number | undefined,
+    long: number | undefined,
+    bypass = false,
   ): Promise<TeachingScheduleEntity | null> {
     const entity = await this.scheduleRepo.findOne({ where: { id } });
     if (!entity) return null;
@@ -179,8 +189,15 @@ export class TeachingSchedulesService {
       throw new BadRequestException('You must check in before checking out.');
     }
 
-    // Location verification is mandatory for check-out
-    await this.validateLocation(entity.course_id, lat, long);
+    // Location verification (unless bypass is true)
+    if (!bypass) {
+      if (lat === undefined || long === undefined) {
+        throw new BadRequestException(
+          'Latitude and longitude are required for check-out unless bypass is true.',
+        );
+      }
+      await this.validateLocation(entity.course_id, lat, long);
+    }
 
     const course = await this.courseRepo.findOne({
       where: { id: entity.course_id },
@@ -252,8 +269,9 @@ export class TeachingSchedulesService {
   }
 
   /**
-   * Validate location against court location
-   * @throws BadRequestException if distance > MAX_CHECKIN_DISTANCE (1km) or court_id not configured
+   * Validate location against court location.
+   * Uses lat/long stored on the `court` record instead of hard-coded constants.
+   * @throws BadRequestException if distance > MAX_CHECKIN_DISTANCE (1km) or court/court_id not configured
    */
   private async validateLocation(
     courseId: number,
@@ -269,29 +287,43 @@ export class TeachingSchedulesService {
       throw new BadRequestException('Course not found.');
     }
 
-    // If course has court_id, it must be configured in COURT_LOCATIONS
-    if (course.court_id) {
-      const courtLocation = COURT_LOCATIONS[course.court_id];
-      if (!courtLocation) {
-        throw new BadRequestException(
-          `Location verification failed: Court ID ${course.court_id} is not configured for location validation.`,
-        );
-      }
-
-      const [courtLat, courtLong] = courtLocation;
-      const distance = this.calculateDistance(lat, long, courtLat, courtLong);
-
-      if (distance > MAX_CHECKIN_DISTANCE) {
-        throw new BadRequestException(
-          `Location verification failed: You are ${Math.round(distance)}m away from the court. ` +
-          `Required distance: within ${MAX_CHECKIN_DISTANCE}m (1km). ` +
-          `Court location: ${courtLat}, ${courtLong}`,
-        );
-      }
-    } else {
-      // If course doesn't have court_id, reject check-in/check-out
+    if (!course.court_id) {
       throw new BadRequestException(
         'Location verification failed: Course does not have a court assigned. Check-in/check-out is not allowed.',
+      );
+    }
+
+    // Load court to get its coordinates
+    const court = await this.courtRepo.findOne({
+      where: { id: course.court_id },
+    });
+
+    if (!court) {
+      throw new BadRequestException(
+        `Location verification failed: Court ID ${course.court_id} not found.`,
+      );
+    }
+
+    if (court.lat == null || court.long == null) {
+      throw new BadRequestException(
+        `Location verification failed: Court ID ${course.court_id} does not have coordinates (lat/long) configured.`,
+      );
+    }
+
+    const distance = this.calculateDistance(
+      lat,
+      long,
+      Number(court.lat),
+      Number(court.long),
+    );
+
+    if (distance > MAX_CHECKIN_DISTANCE) {
+      throw new BadRequestException(
+        `Location verification failed: You are ${Math.round(
+          distance,
+        )}m away from the court. ` +
+        `Required distance: within ${MAX_CHECKIN_DISTANCE}m (1km). ` +
+        `Court location: ${court.lat}, ${court.long}`,
       );
     }
   }

@@ -22,6 +22,22 @@ export class CreateCourtDto {
   @ApiProperty()
   @IsString()
   district: string;
+
+  @ApiProperty({
+    description: 'Latitude of the court (decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  lat?: number;
+
+  @ApiProperty({
+    description: 'Longitude of the court (decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  long?: number;
 }
 
 export class UpdateCourtDto {
@@ -53,6 +69,22 @@ export class UpdateCourtDto {
   @IsOptional()
   @IsString()
   district?: string;
+
+  @ApiProperty({
+    description: 'Latitude of the court (decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  lat?: number;
+
+  @ApiProperty({
+    description: 'Longitude of the court (decimal degrees)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  long?: number;
 }
 
 export class DeleteCourtDto {
@@ -60,5 +92,3 @@ export class DeleteCourtDto {
   @IsNumber()
   courts_id: number;
 }
-
-

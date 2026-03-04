@@ -155,7 +155,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Update status of teaching schedule',
     description:
-      'Requires lat/long for location verification. Must be within 1km of the court location.',
+      'Optional lat/long for location verification (within 1km of the court location). Set bypass=true to skip location verification.',
   })
   async updateStatus(
     @Param('id') id: number,
@@ -168,6 +168,7 @@ export class TeachingSchedulesController {
         dto.status,
         dto.lat,
         dto.long,
+        dto['bypass'] ?? false,
       );
       if (!result) {
         return sendResponse(
@@ -193,7 +194,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-in for teaching schedule',
     description:
-      'Requires lat/long for location verification (within 1km). Automatically sets status to CHECKED_IN or CHECKED_IN_LATE based on time window.',
+      'Requires lat/long for location verification (within 1km), unless bypass=true. Automatically sets status to CHECKED_IN or CHECKED_IN_LATE based on time window.',
   })
   async checkIn(
     @Param('id') id: number,
@@ -205,6 +206,7 @@ export class TeachingSchedulesController {
         Number(id),
         dto.lat,
         dto.long,
+        dto.bypass ?? false,
       );
       if (!result) {
         return sendResponse(
@@ -230,7 +232,7 @@ export class TeachingSchedulesController {
   @ApiOperation({
     summary: 'Check-out for teaching schedule',
     description:
-      'Requires lat/long for location verification (within 1km). Updates status to CHECKED_OUT or CHECKED_OUT_EARLY based on end time.',
+      'Requires lat/long for location verification (within 1km), unless bypass=true. Updates status to CHECKED_OUT or CHECKED_OUT_EARLY based on end time.',
   })
   async checkOut(
     @Param('id') id: number,
@@ -242,6 +244,7 @@ export class TeachingSchedulesController {
         Number(id),
         dto.lat,
         dto.long,
+        dto.bypass ?? false,
       );
       if (!result) {
         return sendResponse(

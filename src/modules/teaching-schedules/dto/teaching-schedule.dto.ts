@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 import { TEACHING_SCHEDULE_STATUS } from 'src/constants/teaching-schedule-status';
 
 export class CreateTeachingScheduleDto {
@@ -140,44 +147,75 @@ export class UpdateTeachingScheduleStatusDto {
   @Type(() => Number)
   @IsNumber()
   long?: number;
+
+  @ApiProperty({
+    description:
+      'Bypass location verification. If true, lat/long are not required and location check is skipped.',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  bypass?: boolean;
 }
 
 export class CheckInTeachingScheduleDto {
   @ApiProperty({
     description:
-      'Latitude for location verification (must be within 1km of court)',
-    required: true,
+      'Latitude for location verification (must be within 1km of court). Required unless bypass = true.',
+    required: false,
   })
   @Type(() => Number)
+  @ValidateIf((o) => !o.bypass)
   @IsNumber()
-  lat: number;
+  lat?: number;
 
   @ApiProperty({
     description:
-      'Longitude for location verification (must be within 1km of court)',
-    required: true,
+      'Longitude for location verification (must be within 1km of court). Required unless bypass = true.',
+    required: false,
   })
   @Type(() => Number)
+  @ValidateIf((o) => !o.bypass)
   @IsNumber()
-  long: number;
+  long?: number;
+
+  @ApiProperty({
+    description:
+      'Bypass location verification. If true, lat/long are not required and location check is skipped.',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  bypass?: boolean;
 }
 
 export class CheckOutTeachingScheduleDto {
   @ApiProperty({
     description:
-      'Latitude for location verification (must be within 1km of court)',
-    required: true,
+      'Latitude for location verification (must be within 1km of court). Required unless bypass = true.',
+    required: false,
   })
   @Type(() => Number)
+  @ValidateIf((o) => !o.bypass)
   @IsNumber()
-  lat: number;
+  lat?: number;
 
   @ApiProperty({
     description:
-      'Longitude for location verification (must be within 1km of court)',
-    required: true,
+      'Longitude for location verification (must be within 1km of court). Required unless bypass = true.',
+    required: false,
   })
   @Type(() => Number)
+  @ValidateIf((o) => !o.bypass)
   @IsNumber()
-  long: number;
+  long?: number;
+
+  @ApiProperty({
+    description:
+      'Bypass location verification. If true, lat/long are not required and location check is skipped.',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  bypass?: boolean;
 }
